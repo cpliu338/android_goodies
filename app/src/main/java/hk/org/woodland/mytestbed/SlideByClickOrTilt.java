@@ -1,37 +1,158 @@
 package hk.org.woodland.mytestbed;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.pm.ActivityInfo;
+import android.graphics.Point;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
+import android.view.Display;
+import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 
 import java.util.Date;
 
 /**
- * Created by cp_liu on 6/22/17.
+ * Slider within a range using tilt, falls back to 2 buttons if no sensors
  */
 
 public class SlideByClickOrTilt implements View.OnClickListener, SensorEventListener {
-    private int value, minValue, maxValue, delta;
+    private int value, minValue, maxValue, delta, maxDelta, minDelta;
     private long lastCheckedTime;
     private ClickOrTiltListener container;
+    private Sensor gravity;
+    private SensorManager sensorManager;
+    private String labelPlus, labelMinus;
+    private Button buttonPlus, buttonMinus;
 
-    public SlideByClickOrTilt(ClickOrTiltListener activity) {
-        value=0; minValue = 0; maxValue = 100;
-        delta = 1;
+    private SlideByClickOrTilt() {
+        /*
+        These should be left as default and not brought forward to copy constructor
+        value=0;
+        gravity = null;
+        delta = 0;
+        */
+        minValue = 0; maxValue = Integer.MAX_VALUE;
+        minDelta = 1; maxDelta = 2;
+    }
+
+    private static class Builder implements Ilabelplus, Ilabelminus, IBtnplus, IBtnminus, IBuild {
+        /*
+        See blog.crisp.se/2013/10/09/perlundholm/another-build-pattern-for-java
+         */
+        private SlideByClickOrTilt instance = new SlideByClickOrTilt();
+
+        @Override
+        public IBuild withMinValue(int minValue) {
+            instance.minValue = minValue;
+            if (minValue >= instance.maxValue) instance.maxValue=minValue+1;
+            return this;
+        }
+        @Override
+        public IBuild withMinDelta(int minDelta) {
+            instance.minDelta = minDelta;
+            if (minDelta >= instance.maxDelta) instance.maxDelta=minDelta+1;
+            return this;
+        }
+        @Override
+        public IBuild withMaxDelta(int maxDelta) {
+            instance.maxDelta = maxDelta;
+            if (maxDelta <= instance.minDelta) instance.minDelta=maxDelta-1;
+            return this;
+        }
+        @Override
+        public IBuild withMaxValue(int maxValue) {
+            instance.maxValue = maxValue;
+            if (maxValue <= instance.minValue) instance.minValue=maxValue-1;
+            return this;
+        }
+        public Builder(String labelPlus) {
+            instance.labelPlus = labelPlus;
+        }
+        @Override
+        public Ilabelminus withLabelPlus(String labelPlus) {
+            instance.labelPlus = labelPlus;
+            return this;
+        }
+        @Override
+        public IBtnplus withLabelMinus(String labelMinus) {
+            instance.labelMinus = labelMinus;
+            return this;
+        }
+        @Override
+        public IBtnminus withButtonPlus(Button buttonPlus) {
+            instance.buttonPlus = buttonPlus;
+            return this;
+        }
+        @Override
+        public IBuild withButtonMinus(Button buttonMinus) {
+            instance.buttonMinus = buttonMinus;
+            return this;
+        }
+        @Override
+        public SlideByClickOrTilt build() {
+            return instance;
+        }
+    }
+
+    public interface Ilabelplus {
+        Ilabelminus withLabelPlus(String labelPlus);
+    }
+    public interface Ilabelminus {
+        IBtnplus withLabelMinus(String labelMinus);
+    }
+    public interface IBtnplus {
+        IBtnminus withButtonPlus(Button buttonPlus);
+    }
+    public interface IBtnminus {
+        IBuild withButtonMinus(Button buttonMinus);
+    }
+    public interface IBuild {
+        IBuild withMinValue(int minValue);
+        IBuild withMinDelta(int minDelta);
+        IBuild withMaxDelta(int maxDelta);
+        IBuild withMaxValue(int maxValue);
+        SlideByClickOrTilt build();
+    }
+
+    public static Ilabelminus withLabelPlus(String labelPlus) {
+        return new SlideByClickOrTilt.Builder(labelPlus);
+    }
+
+    public void runInActivity(ClickOrTiltListener activity) {
         lastCheckedTime = SystemClock.uptimeMillis();
         container = activity;
-        Button btnMinus = (Button)container.findViewById(R.id.minus);
-        Button btnPlus = (Button)container.findViewById(R.id.plus);
-        btnPlus.setOnClickListener(this);
-        btnMinus.setOnClickListener(this);
+        buttonPlus.setOnClickListener(this);
+        buttonMinus.setOnClickListener(this);
+        sensorManager = (SensorManager)container.getSystemService(Context.SENSOR_SERVICE);
+        gravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+        if (gravity != null)
+            sensorManager.registerListener(this, gravity, SensorManager.SENSOR_DELAY_NORMAL);
+        else
+            Log.i(SlideByClickOrTilt.class.getName(), "No gravity sensor");
+    }
 
+    public void cleanUp() {
+        if (gravity != null) {
+            sensorManager.unregisterListener(this);
+            gravity = null;
+        }
+    }
 
+    @Override
+    public void finalize() {
+        cleanUp();
+        try {
+            super.finalize();
+        } catch (Throwable ignored) {}
     }
 
     @Override
@@ -39,22 +160,38 @@ public class SlideByClickOrTilt implements View.OnClickListener, SensorEventList
         // x>3 means minus; x<-3 means plus
         float x = event.values[0];
         if (x>3.0f) {
+            if (SystemClock.uptimeMillis() - lastCheckedTime < 500) return;
             decrease();
+            lastCheckedTime = SystemClock.uptimeMillis();
             Log.i(SlideByClickOrTilt.class.getName(), "value " + x);
         }
         else if (x<-3.0f) {
+            if (SystemClock.uptimeMillis() - lastCheckedTime < 500) return;
             increase();
+            lastCheckedTime = SystemClock.uptimeMillis();
             Log.i(SlideByClickOrTilt.class.getName(), "value " + x);
         }
     }
 
     private void increase() {
-        value = (value < maxValue - delta) ? value+delta : maxValue;
+        if (delta <= 0) {// reverse tilt
+            delta = minDelta;
+        }
+        else { // negative min is in fact max
+            delta = Math.min(maxDelta, delta*2);
+        }
+        value = Math.min(value+delta, maxValue);
         container.onClickorTilt(value);
     }
 
     private void decrease() {
-        value = (value > minValue + delta) ? value-delta : minValue;
+        if (delta >= 0) {// reverse tilt
+            delta = 0-minDelta;
+        }
+        else { // negative min is in fact max
+            delta = Math.max(0-maxDelta, delta*2);
+        }
+        value = Math.max(value+delta, minValue);
         container.onClickorTilt(value);
     }
 
@@ -63,16 +200,59 @@ public class SlideByClickOrTilt implements View.OnClickListener, SensorEventList
         // do nothing
     }
     public void onClick(View v) {
-        lastCheckedTime = SystemClock.uptimeMillis();
-        switch (v.getId()) {
-            case R.id.plus:
-                increase();
+        if (v.getId()==buttonPlus.getId())
+            increase();
+        else if (v.getId()==buttonMinus.getId())
+            decrease();
+        else
+            value = Integer.MIN_VALUE;
+        Log.i(SlideByClickOrTilt.class.getName(), "Delta is now "+delta);
+    }
+
+    /**
+     * See stackoverflow.com/questions/3611457
+     * @param activity The activity
+     */
+    @SuppressWarnings("deprecation")
+    @SuppressLint("NewApi")
+    public static void lockActivityOrientation(Activity activity) {
+        Display display = activity.getWindowManager().getDefaultDisplay();
+        int rotation = display.getRotation();
+        int height;
+        int width;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.HONEYCOMB_MR2) {
+            height = display.getHeight();
+            width = display.getWidth();
+        } else {
+            Point size = new Point();
+            display.getSize(size);
+            height = size.y;
+            width = size.x;
+        }
+        switch (rotation) {
+            case Surface.ROTATION_90:
+                if (width > height)
+                    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+                else
+                    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
                 break;
-            case R.id.minus:
-                decrease();
+            case Surface.ROTATION_180:
+                if (height > width)
+                    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT);
+                else
+                    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
                 break;
-            default: // impossible
-                value = Integer.MIN_VALUE;
+            case Surface.ROTATION_270:
+                if (width > height)
+                    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE);
+                else
+                    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                break;
+            default :
+                if (height > width)
+                    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+                else
+                    activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         }
     }
 

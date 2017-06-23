@@ -3,10 +3,10 @@ package hk.org.woodland.mytestbed;
 import java.util.Objects;
 
 /**
- * Created by cp_liu on 6/22/17.
+ * A callback interface from SlideByClickOrTilt, usually an Activity, with some onXXX listeners
  */
 
-public interface ClickOrTiltListener {
-    public void onClickorTilt(int value);
-    public Object findViewById(int id);
+interface ClickOrTiltListener {
+    void onClickorTilt(int value);
+    Object getSystemService(String service);
 }

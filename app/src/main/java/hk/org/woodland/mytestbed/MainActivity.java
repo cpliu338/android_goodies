@@ -2,12 +2,11 @@ package hk.org.woodland.mytestbed;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
-import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.os.SystemClock;
+import android.widget.Button;
 import android.widget.TextView;
 
 public class MainActivity extends Activity implements ClickOrTiltListener {
@@ -21,27 +20,28 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.slide_by_click_or_tilt);
-        element = new SlideByClickOrTilt(this);
+        element = //new SlideByClickOrTilt.Builder().withMaxValue(200).withMaxDelta(16).build();
+                SlideByClickOrTilt.withLabelPlus(getString(R.string.plus))
+                    .withLabelMinus(getString(R.string.minus))
+                    .withButtonPlus((Button)findViewById(R.id.plus))
+                    .withButtonMinus((Button)findViewById(R.id.minus))
+                    .withMaxValue(200).withMaxDelta(16)
+                .build();
         feedback = (TextView)findViewById(R.id.feedback);
-
-        sensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
-        gravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        if (gravity != null)
-            sensorManager.registerListener(element, gravity, SensorManager.SENSOR_DELAY_NORMAL);
-        else
-            feedback.setText("No gravity sensor" + getString(R.string.minus));
+        SlideByClickOrTilt.lockActivityOrientation(this);
+        element.runInActivity(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        if (gravity != null)
-            sensorManager.unregisterListener(element);
+        element.cleanUp();
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
     }
 
     @Override
