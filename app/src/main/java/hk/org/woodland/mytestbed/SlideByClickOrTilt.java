@@ -3,7 +3,10 @@ package hk.org.woodland.mytestbed;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.ActivityInfo;
 import android.graphics.Point;
 import android.hardware.Sensor;
@@ -11,12 +14,15 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Display;
+import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 
 import java.util.Date;
 
@@ -24,7 +30,7 @@ import java.util.Date;
  * Slider within a range using tilt, falls back to 2 buttons if no sensors
  */
 
-public class SlideByClickOrTilt implements View.OnClickListener, SensorEventListener {
+public class SlideByClickOrTilt extends DialogFragment implements View.OnClickListener, SensorEventListener {
     private int value, minValue, maxValue, delta, maxDelta, minDelta;
     private long lastCheckedTime;
     private ClickOrTiltListener container;
@@ -32,8 +38,9 @@ public class SlideByClickOrTilt implements View.OnClickListener, SensorEventList
     private SensorManager sensorManager;
     private String labelPlus, labelMinus;
     private Button buttonPlus, buttonMinus;
+    private TextView feedback;
 
-    private SlideByClickOrTilt() {
+    public SlideByClickOrTilt() {
         /*
         These should be left as default and not brought forward to copy constructor
         value=0;
@@ -43,6 +50,34 @@ public class SlideByClickOrTilt implements View.OnClickListener, SensorEventList
         minValue = 0; maxValue = Integer.MAX_VALUE;
         minDelta = 1; maxDelta = 2;
     }
+
+    @Override
+    public Dialog onCreateDialog(Bundle savedInstanceState) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        LayoutInflater inflater = getActivity().getLayoutInflater();
+        View v = inflater.inflate(R.layout.slide_by_click_or_tilt, null);
+        feedback = (TextView)v.findViewById(R.id.feedback);
+        feedback.setText("Test");
+        buttonPlus = (Button) v.findViewById(R.id.plus);
+        buttonMinus = (Button) v.findViewById(R.id.minus);
+        buttonPlus.setOnClickListener(this);
+        buttonMinus.setOnClickListener(this);
+        // Inflate and set the layout for the dialog
+        // Pass null as the parent view because its going in the dialog layout
+        builder.setView(v)
+                // Add action buttons
+                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        // sign in the user ...
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int id) {
+                        SlideByClickOrTilt.this.getDialog().cancel();
+                    }
+                });
+        return builder.create();    }
 
     private static class Builder implements Ilabelplus, Ilabelminus, IBtnplus, IBtnminus, IBuild {
         /*
@@ -181,7 +216,7 @@ public class SlideByClickOrTilt implements View.OnClickListener, SensorEventList
             delta = Math.min(maxDelta, delta*2);
         }
         value = Math.min(value+delta, maxValue);
-        container.onClickorTilt(value);
+        this.onClickorTilt(value);
     }
 
     private void decrease() {
@@ -192,7 +227,20 @@ public class SlideByClickOrTilt implements View.OnClickListener, SensorEventList
             delta = Math.max(0-maxDelta, delta*2);
         }
         value = Math.max(value+delta, minValue);
-        container.onClickorTilt(value);
+        this.onClickorTilt(value);
+    }
+
+    private void onClickorTilt(int value) {
+        switch (value) {
+            case Integer.MAX_VALUE:
+                feedback.setText(getString(R.string.app_name));
+                break;
+            case Integer.MIN_VALUE:
+                feedback.setText(getString(R.string.hint));
+                break;
+            default:
+                feedback.setText(getString(R.string.feedback, value, new java.util.Date(System.currentTimeMillis()+value*60000L)));
+        }
     }
 
     @Override
