@@ -6,7 +6,9 @@ import java.util.Objects;
  * A callback interface from SlideByClickOrTilt, usually an Activity, with some onXXX listeners
  */
 
-interface ClickOrTiltListener {
-    void onClickorTilt(int value);
-    Object getSystemService(String service);
+public interface ClickOrTiltListener {
+    //public void onClickorTilt(int value);
+    public String getFeedbackFromValue(int value);
+    public void onConfirmWithValue(int value);
+    //Object getSystemService(String service);
 }

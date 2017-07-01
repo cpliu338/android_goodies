@@ -24,18 +24,18 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
-import java.util.Date;
-
 /**
  * Slider within a range using tilt, falls back to 2 buttons if no sensors
+ * Please use a builder to build an instance, and a ClickOrTiltListener to provide the feedback in the TextView
  * Lifecycle: onAttach -> onCreateDialog -> ... -> onDetach
  */
 
 public class SlideByClickOrTilt extends DialogFragment implements View.OnClickListener, SensorEventListener {
     private int value, minValue, maxValue, delta, maxDelta, minDelta;
     private long lastCheckedTime;
-    private ClickOrTiltListener container;
     private Sensor gravity;
+    private Activity activity;
+    private ClickOrTiltListener listener;
     private SensorManager sensorManager;
     private String labelPlus, labelMinus;
     private Button buttonPlus, buttonMinus;
@@ -59,7 +59,11 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View v = inflater.inflate(R.layout.slide_by_click_or_tilt, null);
         feedback = (TextView)v.findViewById(R.id.feedback);
-        feedback.setText("Test");
+        feedback.setText(
+            listener == null ?
+            SlideByClickOrTilt.class.getSimpleName() :
+            listener.getFeedbackFromValue(minValue)
+        );
         buttonPlus = (Button) v.findViewById(R.id.plus);
         buttonMinus = (Button) v.findViewById(R.id.minus);
         buttonPlus.setOnClickListener(this);
@@ -71,7 +75,7 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        // sign in the user ...
+                    if (listener!=null) listener.onConfirmWithValue(SlideByClickOrTilt.this.value);
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -81,7 +85,7 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
                 });
         return builder.create();    }
 
-    private static class Builder implements Ilabelplus, Ilabelminus, IBtnplus, IBtnminus, IBuild {
+    private static class Builder implements Ilabelplus, Ilabelminus, IBtnplus, IBtnminus, IListener, IBuild {
         /*
         See blog.crisp.se/2013/10/09/perlundholm/another-build-pattern-for-java
          */
@@ -130,8 +134,13 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
             return this;
         }
         @Override
-        public IBuild withButtonMinus(Button buttonMinus) {
+        public IListener withButtonMinus(Button buttonMinus) {
             instance.buttonMinus = buttonMinus;
+            return this;
+        }
+        @Override
+        public IBuild withClickOrTiltListener(ClickOrTiltListener listener) {
+            instance.listener = listener;
             return this;
         }
         @Override
@@ -150,7 +159,10 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
         IBtnminus withButtonPlus(Button buttonPlus);
     }
     public interface IBtnminus {
-        IBuild withButtonMinus(Button buttonMinus);
+        IListener withButtonMinus(Button buttonMinus);
+    }
+    public interface IListener {
+        IBuild withClickOrTiltListener(ClickOrTiltListener listener);
     }
     public interface IBuild {
         IBuild withMinValue(int minValue);
@@ -170,47 +182,28 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
      */
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-        Log.i(SlideByClickOrTilt.class.getName(), "activity attached");
+        this.activity = activity;
+        SlideByClickOrTilt.lockActivityOrientation(activity);
         if (activity != null) {
-            //ClickOrTiltListener listener = (ClickOrTiltListener)activity;
-            this.runInActivity(activity);
+            lastCheckedTime = SystemClock.uptimeMillis();
+            sensorManager = (SensorManager)activity.getSystemService(Context.SENSOR_SERVICE);
+            gravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+            if (gravity != null)
+                sensorManager.registerListener(this, gravity, SensorManager.SENSOR_DELAY_NORMAL);
+            else
+                Log.i(SlideByClickOrTilt.class.getName(), "No gravity sensor");
         }
-    }
-
-    private void runInActivity(Activity activity) {
-        lastCheckedTime = SystemClock.uptimeMillis();
-        //container = activity;
-        //buttonPlus.setOnClickListener(this);
-        //buttonMinus.setOnClickListener(this);
-        sensorManager = (SensorManager)activity.getSystemService(Context.SENSOR_SERVICE);
-        gravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
-        if (gravity != null)
-            sensorManager.registerListener(this, gravity, SensorManager.SENSOR_DELAY_NORMAL);
-        else
-            Log.i(SlideByClickOrTilt.class.getName(), "No gravity sensor");
     }
 
     @Override
     public void onDetach() {
-        Log.i(SlideByClickOrTilt.class.getName(), "activity detached");
-        this.cleanUp();
-        super.onDetach();
-    }
-
-    private void cleanUp() {
+        //Log.i(SlideByClickOrTilt.class.getName(), "activity detached");
+        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
         if (gravity != null) {
             sensorManager.unregisterListener(this);
             gravity = null;
         }
-    }
-
-    @Override
-    public void finalize() {
-        Log.i(SlideByClickOrTilt.class.getName(), "garbage collected");
-        cleanUp();
-        try {
-            super.finalize();
-        } catch (Throwable ignored) {}
+        super.onDetach();
     }
 
     @Override
@@ -262,7 +255,7 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
                 feedback.setText(getString(R.string.hint));
                 break;
             default:
-                feedback.setText(getString(R.string.feedback, value, new java.util.Date(System.currentTimeMillis()+value*60000L)));
+                feedback.setText(listener.getFeedbackFromValue(value));
         }
     }
 
@@ -277,7 +270,7 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
             decrease();
         else
             value = Integer.MIN_VALUE;
-        Log.i(SlideByClickOrTilt.class.getName(), "Delta is now "+delta);
+        //Log.i(SlideByClickOrTilt.class.getName(), "Delta is now "+delta);
     }
 
     /**
