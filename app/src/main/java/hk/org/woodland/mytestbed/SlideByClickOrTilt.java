@@ -28,6 +28,7 @@ import java.util.Date;
 
 /**
  * Slider within a range using tilt, falls back to 2 buttons if no sensors
+ * Lifecycle: onAttach -> onCreateDialog -> ... -> onDetach
  */
 
 public class SlideByClickOrTilt extends DialogFragment implements View.OnClickListener, SensorEventListener {
@@ -53,6 +54,7 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Log.i(SlideByClickOrTilt.class.getName(), "dialog created");
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
         View v = inflater.inflate(R.layout.slide_by_click_or_tilt, null);
@@ -162,12 +164,25 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
         return new SlideByClickOrTilt.Builder(labelPlus);
     }
 
-    public void runInActivity(ClickOrTiltListener activity) {
+    @Override
+    /*
+    OK to call even if deprecated, see https://stackoverflow.com/questions/32258125
+     */
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        Log.i(SlideByClickOrTilt.class.getName(), "activity attached");
+        if (activity != null) {
+            //ClickOrTiltListener listener = (ClickOrTiltListener)activity;
+            this.runInActivity(activity);
+        }
+    }
+
+    private void runInActivity(Activity activity) {
         lastCheckedTime = SystemClock.uptimeMillis();
-        container = activity;
-        buttonPlus.setOnClickListener(this);
-        buttonMinus.setOnClickListener(this);
-        sensorManager = (SensorManager)container.getSystemService(Context.SENSOR_SERVICE);
+        //container = activity;
+        //buttonPlus.setOnClickListener(this);
+        //buttonMinus.setOnClickListener(this);
+        sensorManager = (SensorManager)activity.getSystemService(Context.SENSOR_SERVICE);
         gravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
         if (gravity != null)
             sensorManager.registerListener(this, gravity, SensorManager.SENSOR_DELAY_NORMAL);
@@ -175,7 +190,14 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
             Log.i(SlideByClickOrTilt.class.getName(), "No gravity sensor");
     }
 
-    public void cleanUp() {
+    @Override
+    public void onDetach() {
+        Log.i(SlideByClickOrTilt.class.getName(), "activity detached");
+        this.cleanUp();
+        super.onDetach();
+    }
+
+    private void cleanUp() {
         if (gravity != null) {
             sensorManager.unregisterListener(this);
             gravity = null;
@@ -184,6 +206,7 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
 
     @Override
     public void finalize() {
+        Log.i(SlideByClickOrTilt.class.getName(), "garbage collected");
         cleanUp();
         try {
             super.finalize();

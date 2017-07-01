@@ -48,7 +48,7 @@ public class MainActivity extends Activity { //implements ClickOrTiltListener {
     @Override
     protected void onPause() {
         super.onPause();
-        element.cleanUp();
+        //element.cleanUp();
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
     }
 
