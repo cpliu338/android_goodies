@@ -7,6 +7,6 @@ import java.util.Objects;
  */
 
 interface ClickOrTiltListener {
-    void onClickorTilt(int value);
-    Object getSystemService(String service);
+    public String getFeedbackFromValue(int value);
+    public void onConfirmWithValue(int value);
 }

@@ -18,23 +18,27 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
-
-import java.util.Date;
 
 /**
  * Slider within a range using tilt, falls back to 2 buttons if no sensors
+ * Please use a builder to build an instance, and a ClickOrTiltListener to provide the feedback in the TextView
+ * Lifecycle: onAttach -> onCreateDialog -> ... -> onDetach
  */
 
 public class SlideByClickOrTilt extends DialogFragment implements View.OnClickListener, SensorEventListener {
     private int value, minValue, maxValue, delta, maxDelta, minDelta;
     private long lastCheckedTime;
-    private ClickOrTiltListener container;
     private Sensor gravity;
+    private Activity activity;
+    private ClickOrTiltListener listener;
     private SensorManager sensorManager;
     private String labelPlus, labelMinus;
     private Button buttonPlus, buttonMinus;
@@ -53,15 +57,62 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
+        Log.i(SlideByClickOrTilt.class.getName(), "dialog created");
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        View v = inflater.inflate(R.layout.slide_by_click_or_tilt, null);
-        feedback = (TextView)v.findViewById(R.id.feedback);
-        feedback.setText("Test");
-        buttonPlus = (Button) v.findViewById(R.id.plus);
-        buttonMinus = (Button) v.findViewById(R.id.minus);
+        //View v = inflater.inflate(R.layout.slide_by_click_or_tilt, null);
+        final float scale = getActivity().getResources().getDisplayMetrics().density;
+        LinearLayout v = new LinearLayout(getActivity());
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT);
+        v.setOrientation(LinearLayout.VERTICAL);
+        feedback = new TextView(getActivity());// (TextView)v.findViewById(R.id.feedback);
+        ViewGroup.LayoutParams vparams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        feedback.setLayoutParams(vparams);
+        feedback.setGravity(Gravity.CENTER);
+        feedback.setText(
+                listener == null ?
+                        SlideByClickOrTilt.class.getSimpleName() :
+                        listener.getFeedbackFromValue(minValue)
+        );
+        LinearLayout ll2 = new LinearLayout(getActivity());
+        LinearLayout.LayoutParams params2 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
+        ll2.setOrientation(LinearLayout.HORIZONTAL);
+        buttonPlus = new Button(getActivity()); //v.findViewById(R.id.plus);
+        LinearLayout.LayoutParams params_btn1 = new LinearLayout.LayoutParams(
+                0, // 0 dp, refer layout weight
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                0.15f // layout weight
+        );
+        buttonPlus.setLayoutParams(params_btn1);
+        buttonPlus.setText(labelPlus);
+        buttonPlus.setId(15378);
+        buttonMinus = new Button(getActivity()); //v.findViewById(R.id.minus);
+        LinearLayout.LayoutParams params_btn2 = new LinearLayout.LayoutParams(
+                0, // 0 dp, refer layout weight
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                0.15f // layout weight
+        );
+        buttonMinus.setLayoutParams(params_btn2);
+        buttonMinus.setId(15378+1);
+        buttonMinus.setText(labelMinus);
         buttonPlus.setOnClickListener(this);
         buttonMinus.setOnClickListener(this);
+        TextView hint = new TextView(getActivity());
+        LinearLayout.LayoutParams vparams2 = new LinearLayout.LayoutParams(
+                0, // 0 dp, refer layout weight
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                0.7f // layout weight
+        );
+        hint.setLayoutParams(vparams2);
+        hint.setGravity(Gravity.CENTER);
+        hint.setText(getString(R.string.hint));
+
+        ll2.addView(buttonMinus);
+        ll2.addView(hint);
+        ll2.addView(buttonPlus);
+
+        v.addView(feedback);
+        v.addView(ll2);
         // Inflate and set the layout for the dialog
         // Pass null as the parent view because its going in the dialog layout
         builder.setView(v)
@@ -69,7 +120,7 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        // sign in the user ...
+                        if (listener!=null) listener.onConfirmWithValue(SlideByClickOrTilt.this.value);
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
@@ -79,7 +130,7 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
                 });
         return builder.create();    }
 
-    private static class Builder implements Ilabelplus, Ilabelminus, IBtnplus, IBtnminus, IBuild {
+    private static class Builder implements Ilabelplus, Ilabelminus, IBtnplus, IBtnminus, IListener, IBuild {
         /*
         See blog.crisp.se/2013/10/09/perlundholm/another-build-pattern-for-java
          */
@@ -128,8 +179,13 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
             return this;
         }
         @Override
-        public IBuild withButtonMinus(Button buttonMinus) {
+        public IListener withButtonMinus(Button buttonMinus) {
             instance.buttonMinus = buttonMinus;
+            return this;
+        }
+        @Override
+        public IBuild withClickOrTiltListener(ClickOrTiltListener listener) {
+            instance.listener = listener;
             return this;
         }
         @Override
@@ -148,7 +204,10 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
         IBtnminus withButtonPlus(Button buttonPlus);
     }
     public interface IBtnminus {
-        IBuild withButtonMinus(Button buttonMinus);
+        IListener withButtonMinus(Button buttonMinus);
+    }
+    public interface IListener {
+        IBuild withClickOrTiltListener(ClickOrTiltListener listener);
     }
     public interface IBuild {
         IBuild withMinValue(int minValue);
@@ -162,32 +221,34 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
         return new SlideByClickOrTilt.Builder(labelPlus);
     }
 
-    public void runInActivity(ClickOrTiltListener activity) {
-        lastCheckedTime = SystemClock.uptimeMillis();
-        container = activity;
-        buttonPlus.setOnClickListener(this);
-        buttonMinus.setOnClickListener(this);
-        sensorManager = (SensorManager)container.getSystemService(Context.SENSOR_SERVICE);
-        gravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
-        if (gravity != null)
-            sensorManager.registerListener(this, gravity, SensorManager.SENSOR_DELAY_NORMAL);
-        else
-            Log.i(SlideByClickOrTilt.class.getName(), "No gravity sensor");
-    }
-
-    public void cleanUp() {
-        if (gravity != null) {
-            sensorManager.unregisterListener(this);
-            gravity = null;
+    @Override
+    /*
+    OK to call even if deprecated, see https://stackoverflow.com/questions/32258125
+     */
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        this.activity = activity;
+        SlideByClickOrTilt.lockActivityOrientation(activity);
+        if (activity != null) {
+            lastCheckedTime = SystemClock.uptimeMillis();
+            sensorManager = (SensorManager)activity.getSystemService(Context.SENSOR_SERVICE);
+            gravity = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
+            if (gravity != null)
+                sensorManager.registerListener(this, gravity, SensorManager.SENSOR_DELAY_NORMAL);
+            else
+                Log.i(SlideByClickOrTilt.class.getName(), "No gravity sensor");
         }
     }
 
     @Override
-    public void finalize() {
-        cleanUp();
-        try {
-            super.finalize();
-        } catch (Throwable ignored) {}
+    public void onDetach() {
+        //Log.i(SlideByClickOrTilt.class.getName(), "activity detached");
+        activity.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+        if (gravity != null) {
+            sensorManager.unregisterListener(this);
+            gravity = null;
+        }
+        super.onDetach();
     }
 
     @Override
@@ -236,10 +297,10 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
                 feedback.setText(getString(R.string.app_name));
                 break;
             case Integer.MIN_VALUE:
-                feedback.setText(getString(R.string.hint));
+                feedback.setText(getString(R.string.app_name));
                 break;
             default:
-                feedback.setText(getString(R.string.feedback, value, new java.util.Date(System.currentTimeMillis()+value*60000L)));
+                feedback.setText(listener.getFeedbackFromValue(value));
         }
     }
 
@@ -254,7 +315,7 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
             decrease();
         else
             value = Integer.MIN_VALUE;
-        Log.i(SlideByClickOrTilt.class.getName(), "Delta is now "+delta);
+        //Log.i(SlideByClickOrTilt.class.getName(), "Delta is now "+delta);
     }
 
     /**
