@@ -28,7 +28,17 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 /**
- * Slider within a range using tilt, falls back to 2 buttons if no sensors
+ * A DialogFragment implementing a Slider whose value can be adjusted by tilt, falls back to 2 (+/-) buttons if no sensors
+ * Example use:
+     ClickOrTiltListener listener;
+     SlideByClickOrTilt element = SlideByClickOrTilt
+         .withClickOrTiltListener(MainActivity.this) // mandatory
+         .withMaxValue(200) // mandatory
+         .withMaxDelta(16) // defaults to 2
+         .withMinDelta(1) // defaults to 1
+         .withMinValue(1) // defaults to 0
+         .build();
+     element.show(MainActivity.this.getFragmentManager(), labelFragment);
  * Please use a builder to build an instance, and a ClickOrTiltListener to provide the feedback in the TextView
  * Lifecycle: onAttach -> onCreateDialog -> ... -> onDetach
  */
@@ -40,9 +50,19 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
     private Activity activity;
     private ClickOrTiltListener listener;
     private SensorManager sensorManager;
-    private String labelPlus, labelMinus;
     private Button buttonPlus, buttonMinus;
     private TextView feedback;
+
+    public final String LABELPLUS = "+";
+    public final String LABELMINUS = "-";
+    public final String LABELHINT = "SlideByClickOrTilt";
+
+    // CONSTANT types for custom strings
+    public static final int PLUS = 1;
+    public static final int MINUS = 2;
+    public static final int HINT = 0;
+
+    public static final int BASEID = 15434;
 
     public SlideByClickOrTilt() {
         /*
@@ -51,13 +71,15 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
         gravity = null;
         delta = 0;
         */
-        minValue = 0; maxValue = Integer.MAX_VALUE;
-        minDelta = 1; maxDelta = 2;
+        // maxValue is expected to be overridden
+        maxValue = Integer.MAX_VALUE;
+        minValue = 0; minDelta = 1; maxDelta = 2;
+        //labelPlus = LABELPLUS; labelMinus = LABELMINUS;
     }
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        Log.i(SlideByClickOrTilt.class.getName(), "dialog created");
+        //Log.i(SlideByClickOrTilt.class.getName(), "dialog created");
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
         //View v = inflater.inflate(R.layout.slide_by_click_or_tilt, null);
@@ -69,6 +91,8 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
         ViewGroup.LayoutParams vparams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         feedback.setLayoutParams(vparams);
         feedback.setGravity(Gravity.CENTER);
+
+        value = minValue;
         feedback.setText(
                 listener == null ?
                         SlideByClickOrTilt.class.getSimpleName() :
@@ -84,8 +108,9 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
                 0.15f // layout weight
         );
         buttonPlus.setLayoutParams(params_btn1);
-        buttonPlus.setText(labelPlus);
-        buttonPlus.setId(15378);
+        String s = listener.getCustomText(SlideByClickOrTilt.PLUS);
+        buttonPlus.setText(s==null ? LABELPLUS : s);
+        buttonPlus.setId(BASEID+0);
         buttonMinus = new Button(getActivity()); //v.findViewById(R.id.minus);
         LinearLayout.LayoutParams params_btn2 = new LinearLayout.LayoutParams(
                 0, // 0 dp, refer layout weight
@@ -93,8 +118,9 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
                 0.15f // layout weight
         );
         buttonMinus.setLayoutParams(params_btn2);
-        buttonMinus.setId(15378+1);
-        buttonMinus.setText(labelMinus);
+        buttonMinus.setId(BASEID+1);
+        s = listener.getCustomText(SlideByClickOrTilt.MINUS);
+        buttonMinus.setText(s==null ? LABELMINUS : s);
         buttonPlus.setOnClickListener(this);
         buttonMinus.setOnClickListener(this);
         TextView hint = new TextView(getActivity());
@@ -105,7 +131,8 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
         );
         hint.setLayoutParams(vparams2);
         hint.setGravity(Gravity.CENTER);
-        hint.setText(getString(R.string.hint));
+        s = listener.getCustomText(SlideByClickOrTilt.HINT);
+        hint.setText(s==null ? LABELHINT : s);
 
         ll2.addView(buttonMinus);
         ll2.addView(hint);
@@ -128,9 +155,10 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
                         SlideByClickOrTilt.this.getDialog().cancel();
                     }
                 });
-        return builder.create();    }
+        return builder.create();
+    }
 
-    private static class Builder implements Ilabelplus, Ilabelminus, IBtnplus, IBtnminus, IListener, IBuild {
+    private static class Builder implements IListener, IMaxValue, IBuild {
         /*
         See blog.crisp.se/2013/10/09/perlundholm/another-build-pattern-for-java
          */
@@ -160,9 +188,11 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
             if (maxValue <= instance.minValue) instance.minValue=maxValue-1;
             return this;
         }
-        public Builder(String labelPlus) {
-            instance.labelPlus = labelPlus;
+
+        public Builder(ClickOrTiltListener listener) {
+            instance.listener = listener;
         }
+        /*
         @Override
         public Ilabelminus withLabelPlus(String labelPlus) {
             instance.labelPlus = labelPlus;
@@ -173,18 +203,9 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
             instance.labelMinus = labelMinus;
             return this;
         }
+        */
         @Override
-        public IBtnminus withButtonPlus(Button buttonPlus) {
-            instance.buttonPlus = buttonPlus;
-            return this;
-        }
-        @Override
-        public IListener withButtonMinus(Button buttonMinus) {
-            instance.buttonMinus = buttonMinus;
-            return this;
-        }
-        @Override
-        public IBuild withClickOrTiltListener(ClickOrTiltListener listener) {
+        public IMaxValue withClickOrTiltListener(ClickOrTiltListener listener) {
             instance.listener = listener;
             return this;
         }
@@ -193,7 +214,7 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
             return instance;
         }
     }
-
+/*
     public interface Ilabelplus {
         Ilabelminus withLabelPlus(String labelPlus);
     }
@@ -203,22 +224,23 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
     public interface IBtnplus {
         IBtnminus withButtonPlus(Button buttonPlus);
     }
-    public interface IBtnminus {
-        IListener withButtonMinus(Button buttonMinus);
+    */
+    public interface IMaxValue {
+        IBuild withMaxValue(int maxValue);
     }
     public interface IListener {
-        IBuild withClickOrTiltListener(ClickOrTiltListener listener);
+        IMaxValue withClickOrTiltListener(ClickOrTiltListener listener);
     }
     public interface IBuild {
         IBuild withMinValue(int minValue);
         IBuild withMinDelta(int minDelta);
-        IBuild withMaxDelta(int maxDelta);
         IBuild withMaxValue(int maxValue);
+        IBuild withMaxDelta(int maxDelta);
         SlideByClickOrTilt build();
     }
 
-    public static Ilabelminus withLabelPlus(String labelPlus) {
-        return new SlideByClickOrTilt.Builder(labelPlus);
+    public static IMaxValue withClickOrTiltListener(ClickOrTiltListener listener) {
+        return new SlideByClickOrTilt.Builder(listener);
     }
 
     @Override
@@ -259,13 +281,13 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
             if (SystemClock.uptimeMillis() - lastCheckedTime < 500) return;
             decrease();
             lastCheckedTime = SystemClock.uptimeMillis();
-            Log.i(SlideByClickOrTilt.class.getName(), "value " + x);
+            //Log.i(SlideByClickOrTilt.class.getName(), "value " + x);
         }
         else if (x<-3.0f) {
             if (SystemClock.uptimeMillis() - lastCheckedTime < 500) return;
             increase();
             lastCheckedTime = SystemClock.uptimeMillis();
-            Log.i(SlideByClickOrTilt.class.getName(), "value " + x);
+            //Log.i(SlideByClickOrTilt.class.getName(), "value " + x);
         }
     }
 
@@ -292,16 +314,7 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
     }
 
     private void onClickorTilt(int value) {
-        switch (value) {
-            case Integer.MAX_VALUE:
-                feedback.setText(getString(R.string.app_name));
-                break;
-            case Integer.MIN_VALUE:
-                feedback.setText(getString(R.string.app_name));
-                break;
-            default:
-                feedback.setText(listener.getFeedbackFromValue(value));
-        }
+        feedback.setText(listener.getFeedbackFromValue(value));
     }
 
     @Override

@@ -25,14 +25,11 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                element = //new SlideByClickOrTilt.Builder().withMaxValue(200).withMaxDelta(16).build();
-                        SlideByClickOrTilt.withLabelPlus(getString(R.string.plus))
-                                .withLabelMinus(getString(R.string.minus))
-                                .withButtonPlus((Button)findViewById(R.id.plus))
-                                .withButtonMinus((Button)findViewById(R.id.minus))
-                                .withClickOrTiltListener(MainActivity.this)
-                                .withMaxValue(200).withMaxDelta(16)
-                                .build();
+                element = SlideByClickOrTilt
+                        .withClickOrTiltListener(MainActivity.this)
+                        .withMaxValue(200).withMaxDelta(16)
+                        .withMinValue(1)
+                        .build();
                 element.show(MainActivity.this.getFragmentManager(), "SlideByClickOrTilt");
             }
         });
@@ -56,6 +53,16 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
         Snackbar.make(findViewById(android.R.id.content), "Replace with your own action"+value, Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show();
                         */
+    }
+
+    @Override
+    public String getCustomText(int type) {
+        switch (type) {
+            case SlideByClickOrTilt.MINUS: return getString(R.string.minus);
+            case SlideByClickOrTilt.PLUS: return getString(R.string.plus);
+            case SlideByClickOrTilt.HINT: return getString(R.string.hint);
+        }
+        return null;
     }
 /*
     @Override
