@@ -17,6 +17,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -82,22 +83,27 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
         //Log.i(SlideByClickOrTilt.class.getName(), "dialog created");
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         LayoutInflater inflater = getActivity().getLayoutInflater();
-        //View v = inflater.inflate(R.layout.slide_by_click_or_tilt, null);
         final float scale = getActivity().getResources().getDisplayMetrics().density;
+        /*
         LinearLayout v = new LinearLayout(getActivity());
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.MATCH_PARENT);
         v.setOrientation(LinearLayout.VERTICAL);
+        */
         feedback = new TextView(getActivity());// (TextView)v.findViewById(R.id.feedback);
+        feedback.setGravity(Gravity.CENTER);
+        /*
         ViewGroup.LayoutParams vparams = new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         feedback.setLayoutParams(vparams);
-        feedback.setGravity(Gravity.CENTER);
+         */
 
-        value = minValue;
+        //value = minValue;
         feedback.setText(
                 listener == null ?
                         SlideByClickOrTilt.class.getSimpleName() :
-                        listener.getFeedbackFromValue(minValue)
+                        listener.getFeedbackFromValue(value)
         );
+        feedback.setSingleLine(false);
+        feedback.setTextSize(TypedValue.COMPLEX_UNIT_PT, 14.0f);
         LinearLayout ll2 = new LinearLayout(getActivity());
         LinearLayout.LayoutParams params2 = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,LinearLayout.LayoutParams.WRAP_CONTENT);
         ll2.setOrientation(LinearLayout.HORIZONTAL);
@@ -123,26 +129,28 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
         buttonMinus.setText(s==null ? LABELMINUS : s);
         buttonPlus.setOnClickListener(this);
         buttonMinus.setOnClickListener(this);
+        /*
         TextView hint = new TextView(getActivity());
+        */
         LinearLayout.LayoutParams vparams2 = new LinearLayout.LayoutParams(
                 0, // 0 dp, refer layout weight
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 0.7f // layout weight
         );
-        hint.setLayoutParams(vparams2);
-        hint.setGravity(Gravity.CENTER);
+        feedback.setLayoutParams(vparams2);
+        /*hint.setGravity(Gravity.CENTER);
         s = listener.getCustomText(SlideByClickOrTilt.HINT);
         hint.setText(s==null ? LABELHINT : s);
-
+        */
         ll2.addView(buttonMinus);
-        ll2.addView(hint);
+        ll2.addView(feedback);
         ll2.addView(buttonPlus);
-
+        /*
         v.addView(feedback);
-        v.addView(ll2);
+        v.addView(ll2);*/
         // Inflate and set the layout for the dialog
         // Pass null as the parent view because its going in the dialog layout
-        builder.setView(v)
+        builder.setView(ll2)
                 // Add action buttons
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
@@ -186,6 +194,16 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
         public IBuild withMaxValue(int maxValue) {
             instance.maxValue = maxValue;
             if (maxValue <= instance.minValue) instance.minValue=maxValue-1;
+            return this;
+        }
+        @Override
+        public IBuild withInitValue(int initValue) {
+            if (instance.maxValue < initValue)
+                instance.value=instance.maxValue;
+            else if (initValue < instance.minValue)
+                instance.value = instance.minValue;
+            else
+                instance.value = initValue;
             return this;
         }
 
@@ -236,6 +254,7 @@ public class SlideByClickOrTilt extends DialogFragment implements View.OnClickLi
         IBuild withMinDelta(int minDelta);
         IBuild withMaxValue(int maxValue);
         IBuild withMaxDelta(int maxDelta);
+        IBuild withInitValue(int initValue);
         SlideByClickOrTilt build();
     }
 

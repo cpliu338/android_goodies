@@ -1,10 +1,14 @@
 package hk.org.woodland.mytestbed;
 
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.os.SystemClock;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -13,7 +17,6 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity implements ClickOrTiltListener {
 
-    private SlideByClickOrTilt element;
     private Sensor gravity;
     private SensorManager sensorManager;
 
@@ -25,14 +28,26 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                element = SlideByClickOrTilt
-                        .withClickOrTiltListener(MainActivity.this)
-                        .withMaxValue(200).withMaxDelta(16)
-                        .withMinValue(1)
-                        .build();
-                element.show(MainActivity.this.getFragmentManager(), "SlideByClickOrTilt");
+            testSlideByClickOrTilt();/*
+                AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+                Intent intent = new Intent(MainActivity.this, FakeCallReceiver.class);
+                intent.putExtra(FakeCallReceiver.FAKENAME, getString(R.string.app_name));
+                intent.putExtra(FakeCallReceiver.FAKENUMBER, getString(R.string.plus)+v.getId());
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+                alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 100000L, pendingIntent);
+                Toast.makeText(MainActivity.this, getString(R.string.app_name), Toast.LENGTH_SHORT).show();*/
             }
         });
+    }
+
+    private void testSlideByClickOrTilt() {
+        SlideByClickOrTilt element;
+        element = SlideByClickOrTilt
+                .withClickOrTiltListener(MainActivity.this)
+                .withMaxValue(200).withMaxDelta(16)
+                .withMinValue(1).withInitValue(8)
+                .build();
+        element.show(MainActivity.this.getFragmentManager(), "SlideByClickOrTilt");
     }
 
     @Override
