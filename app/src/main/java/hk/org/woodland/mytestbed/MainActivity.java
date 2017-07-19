@@ -28,14 +28,19 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            testSlideByClickOrTilt();/*
+            /*testSlideByClickOrTilt();
                 AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
                 Intent intent = new Intent(MainActivity.this, FakeCallReceiver.class);
                 intent.putExtra(FakeCallReceiver.FAKENAME, getString(R.string.app_name));
                 intent.putExtra(FakeCallReceiver.FAKENUMBER, getString(R.string.plus)+v.getId());
                 PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
                 alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 100000L, pendingIntent);
-                Toast.makeText(MainActivity.this, getString(R.string.app_name), Toast.LENGTH_SHORT).show();*/
+                Toast.makeText(MainActivity.this, getString(R.string.app_name), Toast.LENGTH_SHORT).show();
+                */
+                Intent intent = new Intent(MainActivity.this, FakeRingingActivity.class);
+                intent.putExtra(FakeCallReceiver.FAKENAME, getString(R.string.app_name));
+                intent.putExtra(FakeCallReceiver.FAKENUMBER, getString(R.string.plus)+v.getId());
+            startActivity(intent);
             }
         });
     }

@@ -7,6 +7,7 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:allowBackup="true"
@@ -21,7 +22,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".FakeRingingActivity"></activity>
+        <activity android:name=".FakeRingingActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            >
+        </activity>
         <receiver android:name=".FakeCallReceiver"/>
     </application>
 
