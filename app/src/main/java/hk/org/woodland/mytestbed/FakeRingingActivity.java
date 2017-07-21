@@ -1,6 +1,7 @@
 package hk.org.woodland.mytestbed;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
@@ -18,6 +19,7 @@ public class FakeRingingActivity extends Activity {
 
     private String networkCarrier;
     private MediaPlayer mp;
+    private Button answerCall;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,12 +40,13 @@ public class FakeRingingActivity extends Activity {
         mp = MediaPlayer.create(getApplicationContext(), notification);
         mp.start();
 
-        Button answerCall = (Button)findViewById(R.id.answercall);
-        Button rejectCall = (Button)findViewById(R.id.rejectcall);
+        answerCall = (Button)findViewById(R.id.answercall);
+			Button rejectCall = (Button)findViewById(R.id.rejectcall);
 
         answerCall.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
+                answerCall.setBackgroundDrawable(FakeRingingActivity.this.getResources().getDrawable(R.drawable.ic_micoff));
                 mp.stop();
             }
         });
@@ -51,6 +54,10 @@ public class FakeRingingActivity extends Activity {
             @Override
             public void onClick(View v) {
                 mp.stop();
+				Intent startMain = new Intent(Intent.ACTION_MAIN);
+				startMain.addCategory(Intent.CATEGORY_HOME);
+				startMain.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+				startActivity(startMain);
             }
         });
 

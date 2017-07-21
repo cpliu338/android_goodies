@@ -1,6 +1,7 @@
 <resources>
-    <string name="app_name">MyTestBed</string>
+    <string name="app_name">Woodland</string>
+    <string name="fakecall">Fake call</string>
     <string name="plus">+</string>
-    <string name="minus">-</string>
     <string name="feedback">%1$d mins later, approx. %2$tH:%2$tM</string>
+    <string name="call_at">Fake call at %1$tH:%1$tM</string>
 </resources>

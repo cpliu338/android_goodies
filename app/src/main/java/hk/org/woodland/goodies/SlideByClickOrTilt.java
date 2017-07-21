@@ -1,4 +1,4 @@
-package hk.org.woodland.mytestbed;
+package hk.org.woodland.goodies;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -23,7 +23,6 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Surface;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;

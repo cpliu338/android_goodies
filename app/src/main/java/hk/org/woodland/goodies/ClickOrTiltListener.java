@@ -1,4 +1,4 @@
-package hk.org.woodland.mytestbed;
+package hk.org.woodland.goodies;
 
 import java.util.Objects;
 
@@ -6,7 +6,7 @@ import java.util.Objects;
  * A callback interface from SlideByClickOrTilt, usually implemented by the calling Activity
  */
 
-interface ClickOrTiltListener {
+public interface ClickOrTiltListener {
     public String getFeedbackFromValue(int value);
 
     /**

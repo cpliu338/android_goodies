@@ -5,15 +5,18 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
-import android.os.SystemClock;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
+
+import hk.org.woodland.goodies.ClickOrTiltListener;
+import hk.org.woodland.goodies.SlideByClickOrTilt;
 
 public class MainActivity extends Activity implements ClickOrTiltListener {
 
@@ -28,15 +31,6 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            /*testSlideByClickOrTilt();
-                AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
-                Intent intent = new Intent(MainActivity.this, FakeCallReceiver.class);
-                intent.putExtra(FakeCallReceiver.FAKENAME, getString(R.string.app_name));
-                intent.putExtra(FakeCallReceiver.FAKENUMBER, getString(R.string.plus)+v.getId());
-                PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
-                alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + 100000L, pendingIntent);
-                Toast.makeText(MainActivity.this, getString(R.string.app_name), Toast.LENGTH_SHORT).show();
-                */
                 Intent intent = new Intent(MainActivity.this, FakeRingingActivity.class);
                 intent.putExtra(FakeCallReceiver.FAKENAME, getString(R.string.app_name));
                 intent.putExtra(FakeCallReceiver.FAKENUMBER, getString(R.string.plus)+v.getId());
@@ -44,13 +38,33 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
             }
         });
     }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
 
-    private void testSlideByClickOrTilt() {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        switch (item.getItemId()) {
+            case R.id.fakecall:
+                //SlideByClickOrTilt.lockActivityOrientation(this);
+                setFakeTime();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void setFakeTime() {
         SlideByClickOrTilt element;
         element = SlideByClickOrTilt
                 .withClickOrTiltListener(MainActivity.this)
                 .withMaxValue(200).withMaxDelta(16)
-                .withMinValue(1).withInitValue(8)
+                .withMinValue(1).withInitValue(5)
                 .build();
         element.show(MainActivity.this.getFragmentManager(), "SlideByClickOrTilt");
     }
@@ -67,8 +81,17 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
     public void onConfirmWithValue(int value) {
         long ms = value * 60000L;
         //this.onMuteSelected(ms);
+            /*
         Toast toast = Toast.makeText(this, MainActivity.class.getSimpleName()+value, Toast.LENGTH_SHORT);
         toast.show();
+        */
+                AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
+                Intent intent = new Intent(this, FakeCallReceiver.class);
+                intent.putExtra(FakeCallReceiver.FAKENAME, getString(R.string.app_name));
+                intent.putExtra(FakeCallReceiver.FAKENUMBER, getString(R.string.plus)+value);
+                PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
+                alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + value*60000L, pendingIntent);
+                Toast.makeText(MainActivity.this, getString(R.string.call_at, new java.util.Date(System.currentTimeMillis()+value*60000L)), Toast.LENGTH_SHORT).show();
         /*
         Snackbar.make(findViewById(android.R.id.content), "Replace with your own action"+value, Snackbar.LENGTH_LONG)
                 .setAction("Action", null).show();
@@ -77,18 +100,19 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
 
     @Override
     public String getCustomText(int type) {
+        /*
         switch (type) {
             case SlideByClickOrTilt.MINUS: return getString(R.string.minus);
             case SlideByClickOrTilt.PLUS: return getString(R.string.plus);
             case SlideByClickOrTilt.HINT: return getString(R.string.hint);
         }
+        */
         return null;
     }
 /*
     @Override
     protected void onResume() {
         super.onResume();
-        SlideByClickOrTilt.lockActivityOrientation(this);
         element.runInActivity(this);
         This should be triggered in button click
     }
