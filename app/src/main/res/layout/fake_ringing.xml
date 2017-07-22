@@ -30,7 +30,7 @@
             android:layout_centerHorizontal="true"
             android:layout_marginTop="15dp"
             android:contentDescription="@null"
-            android:src="@drawable/caller_pict" />
+            android:src="@mipmap/ic_launcher" />
 
         <TextView
             android:id="@+id/chosenfakename"

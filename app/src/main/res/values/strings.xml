@@ -4,4 +4,11 @@
     <string name="plus">+</string>
     <string name="feedback">%1$d mins later, approx. %2$tH:%2$tM</string>
     <string name="call_at">Fake call at %1$tH:%1$tM</string>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to Settings -->
+
+    <!-- Example General settings
+    <string name="pref_header_general">General</string>
+-->
 </resources>

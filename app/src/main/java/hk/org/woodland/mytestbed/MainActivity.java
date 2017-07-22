@@ -5,10 +5,12 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -22,18 +24,18 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
 
     private Sensor gravity;
     private SensorManager sensorManager;
+    private Button btn1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
         setContentView(R.layout.activity_main);
-        Button btn1 = (Button)findViewById(R.id.btn1);
+        btn1 = (Button)findViewById(R.id.btn1);
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(MainActivity.this, FakeRingingActivity.class);
-                intent.putExtra(FakeCallReceiver.FAKENAME, getString(R.string.app_name));
-                intent.putExtra(FakeCallReceiver.FAKENUMBER, getString(R.string.plus)+v.getId());
+            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
             startActivity(intent);
             }
         });
@@ -109,14 +111,15 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
         */
         return null;
     }
-/*
     @Override
     protected void onResume() {
         super.onResume();
-        element.runInActivity(this);
-        This should be triggered in button click
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+        String syncConnPref = sharedPref.getString("carrier", "Hello World");
+        btn1.setText(syncConnPref);
     }
 
+/*
     @Override
     protected void onPause() {
         super.onPause();
