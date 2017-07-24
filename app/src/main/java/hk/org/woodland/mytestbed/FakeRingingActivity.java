@@ -2,11 +2,13 @@ package hk.org.woodland.mytestbed;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.view.WindowManager;
@@ -20,6 +22,10 @@ public class FakeRingingActivity extends Activity {
     private String networkCarrier;
     private MediaPlayer mp;
     private Button answerCall;
+    private boolean muted;
+    public static final String CARRIER = "carrier";
+    public static final String FAKENAME = "fake_name";
+    public static final String FAKENUMBER = "fake_number";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -31,11 +37,14 @@ public class FakeRingingActivity extends Activity {
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
         TextView fakeName = (TextView)findViewById(R.id.chosenfakename);
         TextView fakeNumber = (TextView)findViewById(R.id.chosenfakenumber);
-        networkCarrier = "Smartone";
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        //networkCarrier = "Smartone";
         TextView titleBar = (TextView)findViewById(R.id.textView1);
-        titleBar.setText(networkCarrier);
-        fakeName.setText(getIntent().getStringExtra(FakeCallReceiver.FAKENAME));
-        fakeNumber.setText(getIntent().getStringExtra(FakeCallReceiver.FAKENUMBER));
+        titleBar.setText(prefs.getString(CARRIER, CARRIER));
+        fakeName.setText(prefs.getString(FAKENAME, FAKENAME));
+                //getIntent().getStringExtra(FakeCallReceiver.FAKENAME));
+        fakeNumber.setText(prefs.getString(FAKENUMBER, FAKENUMBER));
+                //getIntent().getStringExtra(FakeCallReceiver.FAKENUMBER));
         Uri notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
         mp = MediaPlayer.create(getApplicationContext(), notification);
         mp.start();
@@ -46,8 +55,15 @@ public class FakeRingingActivity extends Activity {
         answerCall.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
-                answerCall.setBackgroundDrawable(FakeRingingActivity.this.getResources().getDrawable(R.drawable.ic_micoff));
-                mp.stop();
+                if (muted) {
+                    Intent startMain = new Intent(FakeRingingActivity.this, MainActivity.class);
+                    startActivity(startMain);
+                }
+                else {
+                    muted = true;
+                    answerCall.setBackgroundDrawable(FakeRingingActivity.this.getResources().getDrawable(R.drawable.ic_micoff));
+                    mp.stop();
+                }
             }
         });
         rejectCall.setOnClickListener(new View.OnClickListener(){

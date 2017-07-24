@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Woodland</string>
     <string name="fakecall">Fake call</string>
+    <string name="settings">Settings</string>
     <string name="plus">+</string>
     <string name="feedback">%1$d mins later, approx. %2$tH:%2$tM</string>
     <string name="call_at">Fake call at %1$tH:%1$tM</string>
@@ -8,7 +9,11 @@
 
     <!-- Strings related to Settings -->
 
-    <!-- Example General settings
-    <string name="pref_header_general">General</string>
--->
+    <!-- Example General settings-->
+    <string name="title_carrier">Carrier</string>
+    <string name="summary_carrier">Name of mobile operator</string>
+    <string name="title_fake_name">Fake Name</string>
+    <string name="summary_fake_name">Name of caller</string>
+    <string name="title_fake_number">Fake Number</string>
+    <string name="summary_fake_number">Number of caller</string>
 </resources>

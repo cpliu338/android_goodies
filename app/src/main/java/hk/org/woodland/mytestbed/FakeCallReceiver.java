@@ -13,15 +13,15 @@ import hk.org.woodland.goodies.WakeLock;
 
 public class FakeCallReceiver extends BroadcastReceiver {
 
-    public static final String FAKENAME = "fakename";
-    public static final String FAKENUMBER = "fakenumber";
+    //public static final String FAKENAME = "fakename";
+    //public static final String FAKENUMBER = "fakenumber";
     @Override
     public void onReceive(Context context, Intent intent) {
         WakeLock.acquire(context, FakeCallReceiver.class.getName());
         Intent i = new Intent(context.getApplicationContext(), FakeRingingActivity.class);
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        i.putExtra(FAKENAME, intent.getStringExtra(FAKENAME));
-        i.putExtra(FAKENUMBER, intent.getStringExtra(FAKENUMBER));
+        //i.putExtra(FAKENAME, intent.getStringExtra(FAKENAME));
+        //i.putExtra(FAKENUMBER, intent.getStringExtra(FAKENUMBER));
         context.startActivity(i);
     }
 }

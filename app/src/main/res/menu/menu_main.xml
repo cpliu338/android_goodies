@@ -8,5 +8,8 @@
         android:id="@+id/fakecall"
         android:title="@string/fakecall"
         app:showAsAction="never" />
-    />
+    <item
+        android:id="@+id/settings"
+        android:title="@string/settings"
+        app:showAsAction="never" />
 </menu>

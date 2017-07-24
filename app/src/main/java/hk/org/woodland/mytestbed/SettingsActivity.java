@@ -184,17 +184,16 @@ public class SettingsActivity extends PreferenceActivity {
         @Override
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            addPreferencesFromResource(R.xml.pref_general);
+            addPreferencesFromResource(R.xml.preferences);
             setHasOptionsMenu(true);
 
             // Bind the summaries of EditText/List/Dialog/Ringtone preferences
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("carrier"));
-            /*
-            bindPreferenceSummaryToValue(findPreference("example_list"));
-            */
+            bindPreferenceSummaryToValue(findPreference(FakeRingingActivity.CARRIER));
+            bindPreferenceSummaryToValue(findPreference(FakeRingingActivity.FAKENAME));
+            bindPreferenceSummaryToValue(findPreference(FakeRingingActivity.FAKENUMBER));
         }
 
         @Override

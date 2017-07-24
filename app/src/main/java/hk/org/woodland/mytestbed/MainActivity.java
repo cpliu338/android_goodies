@@ -29,7 +29,7 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        PreferenceManager.setDefaultValues(this, R.xml.pref_general, false);
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         setContentView(R.layout.activity_main);
         btn1 = (Button)findViewById(R.id.btn1);
         btn1.setOnClickListener(new View.OnClickListener() {
@@ -57,6 +57,9 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
                 //SlideByClickOrTilt.lockActivityOrientation(this);
                 setFakeTime();
                 break;
+            case R.id.settings:
+                Intent intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -89,8 +92,8 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
         */
                 AlarmManager alarmManager = (AlarmManager)getSystemService(Context.ALARM_SERVICE);
                 Intent intent = new Intent(this, FakeCallReceiver.class);
-                intent.putExtra(FakeCallReceiver.FAKENAME, getString(R.string.app_name));
-                intent.putExtra(FakeCallReceiver.FAKENUMBER, getString(R.string.plus)+value);
+                //intent.putExtra(FakeCallReceiver.FAKENAME, getString(R.string.app_name));
+                //intent.putExtra(FakeCallReceiver.FAKENUMBER, getString(R.string.plus)+value);
                 PendingIntent pendingIntent = PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
                 alarmManager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + value*60000L, pendingIntent);
                 Toast.makeText(MainActivity.this, getString(R.string.call_at, new java.util.Date(System.currentTimeMillis()+value*60000L)), Toast.LENGTH_SHORT).show();
