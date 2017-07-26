@@ -24,13 +24,21 @@
         </activity>
         <activity
             android:name=".FakeRingingActivity"
-            android:theme="@style/Theme.AppCompat.NoActionBar"></activity>
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
 
         <receiver android:name=".FakeCallReceiver" />
 
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="hk.org.woodland.mytestbed.MainActivity" />
+        </activity>
+        <activity
+            android:name="hk.org.woodland.lolo.LoloActivity"
+            android:label="@string/title_activity_lolo"
             android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

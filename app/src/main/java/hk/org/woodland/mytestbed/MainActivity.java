@@ -19,6 +19,7 @@ import android.widget.Toast;
 
 import hk.org.woodland.goodies.ClickOrTiltListener;
 import hk.org.woodland.goodies.SlideByClickOrTilt;
+import hk.org.woodland.lolo.LoloActivity;
 
 public class MainActivity extends Activity implements ClickOrTiltListener {
 
@@ -35,7 +36,7 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            Intent intent = new Intent(MainActivity.this, SettingsActivity.class);
+            Intent intent = new Intent(MainActivity.this, LoloActivity.class);
             startActivity(intent);
             }
         });

@@ -16,4 +16,5 @@
     <string name="summary_fake_name">Name of caller</string>
     <string name="title_fake_number">Fake Number</string>
     <string name="summary_fake_number">Number of caller</string>
+    <string name="title_activity_lolo">LoloActivity</string>
 </resources>
