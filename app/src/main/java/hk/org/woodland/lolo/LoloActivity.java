@@ -20,7 +20,7 @@ import hk.org.woodland.mytestbed.R;
 public class LoloActivity extends Activity {
 
     private static final String TAG = "LoloAct";
-    public static final int DEVICE_DENSITY_DPI;
+    public static float SCALE_DPI;
 
     LoloView loloView;
 
@@ -30,14 +30,14 @@ public class LoloActivity extends Activity {
         WindowManager windowManager = (WindowManager)getSystemService(Context.WINDOW_SERVICE);
         DisplayMetrics metrics = new DisplayMetrics();
         windowManager.getDefaultDisplay().getMetrics(metrics);
-        DEVICE_DENSITY_DPI = metrics.densityDpi;
+        SCALE_DPI = (float)(metrics.densityDpi)/(float)(DisplayMetrics.DENSITY_DEFAULT);
         setContentView(R.layout.activity_lolo);
         Button btn1 = (Button)findViewById(R.id.home);
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(LoloActivity.this);
-                String [] items = new String[4];
+                String [] items = new String[5];
                 Display display = getWindowManager().getDefaultDisplay();
                 Point size = new Point();
                 display.getSize(size);
@@ -49,6 +49,7 @@ public class LoloActivity extends Activity {
                 else {
                     items[2] = LoloActivity.class.getName(); items[3] = LoloActivity.class.getName();
                 }
+                items[4] = Float.valueOf(SCALE_DPI).toString();
                 builder.setMultiChoiceItems(items,null, null).setPositiveButton(getString(R.string.plus), new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

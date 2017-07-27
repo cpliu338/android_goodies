@@ -44,9 +44,11 @@ public class LoloView extends View {
     }
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        Log.d(TAG, "onSizeChanged: width1 " + w + ", height1 " + h);
-        width1 = w / 6f /2f; // assume 320dpi
-        height1 = h / 6f / 2f;
+        Log.d(TAG, "onSizeChanged: width " + w + ", height " + h);
+        width1 = w / LoloActivity.SCALE_DPI / 6f * 2.5f;
+        // assume 320dpi
+        height1 = h / LoloActivity.SCALE_DPI / 6f * 2.5f;
+        Log.d(TAG, "tile in dp: width1 " + width1 + ", height1 " + height1);
         super.onSizeChanged(w, h, oldw, oldh);
     }
 
@@ -57,8 +59,9 @@ public class LoloView extends View {
         background.setColor(getResources().getColor(android.R.color.white));
         canvas.drawRect(0, 0, (int)(getWidth1() *6f), (int)(getHeight1() *6f), background);
         background.setColor(getResources().getColor(R.color.colorAccent));
-        canvas.drawRect(4* getWidth1(), 4* getHeight1(), getWidth1(), getHeight1(), background);
-        canvas.drawRect(0, 0, getWidth1(), getHeight1(), background);
+        for (int i=0; i<6; i++) {
+            canvas.drawRect(i*width1, i*height1, (i+1)*width1, (i+1)*height1, background);
+        }
     }
 
     public float getWidth1() {
