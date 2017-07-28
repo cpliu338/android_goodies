@@ -44,10 +44,9 @@ public class LoloView extends View {
     }
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        Log.d(TAG, "onSizeChanged: width " + w + ", height " + h);
-        width1 = w / LoloActivity.SCALE_DPI / 6f * 2.5f;
-        // assume 320dpi
-        height1 = h / LoloActivity.SCALE_DPI / 6f * 2.5f;
+        // w and h are in dp
+        width1 = w / 6.0f;
+        height1 = h / 6.0f;
         Log.d(TAG, "tile in dp: width1 " + width1 + ", height1 " + height1);
         super.onSizeChanged(w, h, oldw, oldh);
     }
