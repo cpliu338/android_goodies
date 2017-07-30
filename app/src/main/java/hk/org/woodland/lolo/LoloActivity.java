@@ -7,22 +7,26 @@ import android.content.Intent;
 import android.graphics.Point;
 import android.os.Bundle;
 import android.app.Activity;
+import android.support.v4.view.MotionEventCompat;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.TextView;
 
 import hk.org.woodland.mytestbed.MainActivity;
 import hk.org.woodland.mytestbed.R;
 
-public class LoloActivity extends Activity {
+public class LoloActivity extends Activity implements View.OnTouchListener {
 
     private static final String TAG = "LoloAct";
     public static float SCALE_DPI;
 
     LoloView loloView;
+    TextView status;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +36,7 @@ public class LoloActivity extends Activity {
         windowManager.getDefaultDisplay().getMetrics(metrics);
         SCALE_DPI = (float)(metrics.densityDpi)/(float)(DisplayMetrics.DENSITY_DEFAULT);
         setContentView(R.layout.activity_lolo);
+        status = (TextView) findViewById(R.id.status);
         Button btn1 = (Button)findViewById(R.id.home);
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -44,7 +49,7 @@ public class LoloActivity extends Activity {
                 items[0] = Integer.valueOf(size.x).toString(); items[1] = Integer.valueOf(size.y).toString();
                 if (loloView != null) {
                     items[2] = Float.valueOf(loloView.getWidth1()).toString();
-                    items[3] = Float.valueOf(loloView.getHeight1()).toString();
+                    items[3] = Integer.valueOf(loloView.getSize()).toString();
                 }
                 else {
                     items[2] = LoloActivity.class.getName(); items[3] = LoloActivity.class.getName();
@@ -60,17 +65,38 @@ public class LoloActivity extends Activity {
                 builder.create().show();
             }
         });
-        //getActionBar().setDisplayHomeAsUpEnabled(true);
+        loloView = (LoloView)findViewById(R.id.lolo);
+        loloView.setOnTouchListener(this);
+        loloView.post(new Runnable() {
+            @Override
+            public void run() {
+                loloView.setWidth1(
+                    loloView.getWidth()/6
+                );
+            }
+        });
+        /* getActionBar().setDisplayHomeAsUpEnabled(true); */
+    }
+
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        int action = MotionEventCompat.getActionMasked(event);
+
+        switch(action) {
+            case (MotionEvent.ACTION_DOWN) :
+                int x = (int)Math.floor(event.getX()/loloView.getWidth1());
+                int y = (int)(event.getY()) / (int)loloView.getWidth1();
+                status.setText(String.format("%d, %d", x, y));
+                Log.d(TAG,String.format("Action was DOWN at %f, %f", event.getX(), event.getY()));
+                return true;
+            default :
+                return super.onTouchEvent(event);
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        loloView = (LoloView)findViewById(R.id.lolo);
-        if (loloView != null) {
-            Log.d(TAG, String.format("%d,%d,%d,%d", loloView.getLeft(), loloView.getTop(), loloView.getRight(), loloView.getBottom()));
-            loloView.setMinimumHeight(loloView.getRight());
-        }
     }
 
 }
