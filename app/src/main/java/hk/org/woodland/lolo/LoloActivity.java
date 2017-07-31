@@ -71,7 +71,7 @@ public class LoloActivity extends Activity implements View.OnTouchListener {
             @Override
             public void run() {
                 loloView.setWidth1(
-                    loloView.getWidth()/6
+                    loloView.getWidth()/LoloView.SIZE
                 );
             }
         });
@@ -84,8 +84,13 @@ public class LoloActivity extends Activity implements View.OnTouchListener {
 
         switch(action) {
             case (MotionEvent.ACTION_DOWN) :
-                int x = (int)Math.floor(event.getX()/loloView.getWidth1());
-                int y = (int)(event.getY()) / (int)loloView.getWidth1();
+                short x = (short)Math.floor(event.getX()/loloView.getWidth1());
+                short y = (short)Math.floor(event.getY()/loloView.getWidth1());
+                        //(int)(event.getY()) / (int)loloView.getWidth1();
+                short oldcolor = loloView.getColorAtXY(x, y);
+                short newcolor = (oldcolor==3) ? 1 : (short) (oldcolor + 1);
+                loloView.setColorAtXY(x, y, newcolor);
+                loloView.invalidate();
                 status.setText(String.format("%d, %d", x, y));
                 Log.d(TAG,String.format("Action was DOWN at %f, %f", event.getX(), event.getY()));
                 return true;

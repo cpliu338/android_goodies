@@ -2,6 +2,7 @@ package hk.org.woodland.lolo;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Parcelable;
@@ -21,13 +22,58 @@ public class LoloView extends View {
 
     private static final String VIEW_STATE = "viewState";
     private static final String TAG = "Lolo";
+    private Context context;
+
+    public static final int SIZE = 6;
+    private Game game;
 
     private float width1;    // width1 of one tile in dp
-    //private float height1;   // height1 of one tile in dp
     int size; // loloview size in px
+
+    static class Game {
+        private short colors[][];   //
+        private short values[][];   //
+
+        Game() {
+            colors = new short[SIZE][SIZE];
+            values = new short[SIZE][SIZE];
+            for (short i=0; i<SIZE; i++) {
+                for (short j=0; j<SIZE; j++) {
+                    colors[i][j] = 1;
+                    values[i][j] = 1;
+                }
+            }
+        }
+
+        void setColorAtXY(Context context, short x, short y, int color) {
+
+        }
+    }
+
+    public int getColorValueAtXY(short x, short y) {
+        switch (game.colors[x][y]) {
+            case 1: return context.getResources().getColor(R.color.color1);
+            case 2: return context.getResources().getColor(R.color.color2);
+            case 3: return context.getResources().getColor(R.color.color3);
+            case 50: return context.getResources().getColor(R.color.color50);
+            case 0:
+            default:
+                return context.getResources().getColor(R.color.color0);
+        }
+    }
+
+    public short getColorAtXY(short x, short y) {
+        return game.colors[x][y];
+    }
+
+    public void setColorAtXY(short x, short y, short color) {
+        game.colors[x][y] = color;
+    }
 
     public LoloView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        this.context = context;
+        game = new Game();
         setFocusable(true);
         setFocusableInTouchMode(true);
     }
@@ -71,11 +117,13 @@ public class LoloView extends View {
         // Draw the background...
         Log.d(TAG, "Draw with width (dp): " + width1);
         Paint background = new Paint();
-        background.setColor(getResources().getColor(android.R.color.white));
-        canvas.drawRect(0, 0, (int)(width1 *6f), (int)(width1 *6f), background);
-        background.setColor(getResources().getColor(R.color.colorAccent));
-        for (int i=0; i<6; i++) {
-            canvas.drawRect(i*width1, i*width1, (i+1)*width1, (i+1)*width1, background);
+        //background.setColor(getResources().getColor(android.R.color.white));
+        //canvas.drawRect(0, 0, (int)(width1 *6f), (int)(width1 *6f), background);
+        for (short i=0; i<SIZE; i++) {
+            for (short j=0; j<SIZE; j++) {
+                background.setColor(getColorValueAtXY(i, j));
+                canvas.drawRect(i * width1, j * width1, (i + 1) * width1, (j + 1) * width1, background);
+            }
         }
     }
 
