@@ -27,6 +27,7 @@ public class LoloActivity extends Activity implements View.OnTouchListener {
 
     LoloView loloView;
     TextView status;
+    int state; // 0=>plan, 1=>play
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,32 +38,18 @@ public class LoloActivity extends Activity implements View.OnTouchListener {
         SCALE_DPI = (float)(metrics.densityDpi)/(float)(DisplayMetrics.DENSITY_DEFAULT);
         setContentView(R.layout.activity_lolo);
         status = (TextView) findViewById(R.id.status);
-        Button btn1 = (Button)findViewById(R.id.home);
+        final Button btn1 = (Button)findViewById(R.id.home);
+        state = 0;
+
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(LoloActivity.this);
-                String [] items = new String[5];
-                Display display = getWindowManager().getDefaultDisplay();
-                Point size = new Point();
-                display.getSize(size);
-                items[0] = Integer.valueOf(size.x).toString(); items[1] = Integer.valueOf(size.y).toString();
-                if (loloView != null) {
-                    items[2] = Float.valueOf(loloView.getWidth1()).toString();
-                    items[3] = Integer.valueOf(loloView.getSize()).toString();
+                state = 1-state;
+                btn1.setText(LoloActivity.this.getString(state==0 ? R.string.plan : R.string.play));
+                if (state == 0) {
+                    loloView.initTiles(0);
+                    loloView.invalidate();
                 }
-                else {
-                    items[2] = LoloActivity.class.getName(); items[3] = LoloActivity.class.getName();
-                }
-                items[4] = Float.valueOf(SCALE_DPI).toString();
-                builder.setMultiChoiceItems(items,null, null).setPositiveButton(getString(R.string.plus), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        Intent intent = new Intent(LoloActivity.this, MainActivity.class);
-                        startActivity(intent);
-                    }
-                });
-                builder.create().show();
             }
         });
         loloView = (LoloView)findViewById(R.id.lolo);
@@ -86,13 +73,20 @@ public class LoloActivity extends Activity implements View.OnTouchListener {
             case (MotionEvent.ACTION_DOWN) :
                 short x = (short)Math.floor(event.getX()/loloView.getWidth1());
                 short y = (short)Math.floor(event.getY()/loloView.getWidth1());
-                        //(int)(event.getY()) / (int)loloView.getWidth1();
                 short oldcolor = loloView.getColorAtXY(x, y);
-                short newcolor = (oldcolor==3) ? 1 : (short) (oldcolor + 1);
-                loloView.setColorAtXY(x, y, newcolor);
+                if (state == 0) {
+                    loloView.setColorAtXY(x, y,
+                        (oldcolor == 3) ? 1 : (short) (oldcolor + 1)
+                    );
+                }
+                else {
+                    int nblacks = loloView.spread(x, y, oldcolor);
+                    Log.d(TAG,String.format("No of blacks %d", nblacks));
+                    loloView.initTiles(0);
+                }
                 loloView.invalidate();
-                status.setText(String.format("%d, %d", x, y));
-                Log.d(TAG,String.format("Action was DOWN at %f, %f", event.getX(), event.getY()));
+
+                status.setText(String.format("%d, %d", loloView.getValueAtXY(x,y), 0));
                 return true;
             default :
                 return super.onTouchEvent(event);
