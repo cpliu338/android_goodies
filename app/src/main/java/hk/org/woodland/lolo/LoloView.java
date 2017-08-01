@@ -94,14 +94,28 @@ public class LoloView extends View {
         void initTiles(int mode) {
             // This is development mode if (mode == 0)
             Random random = new Random();
+            short[] tempColors = new short[SIZE];
+            short[] tempValues = new short[SIZE];
+            short index;
             for (short i = 0; i < SIZE; i++) {
-                for (short j = 0; j < SIZE; j++) {
-                    if (colors[i][j] == 0) {
-                        int r = 1+random.nextInt(3);
-                        Log.d(TAG, String.format("randomed %d", r));
-                        colors[i][j] = (short)(r);
-                        values[i][j] = 1;
+                index=SIZE-1;
+                for (short j=index; j>=0; j--) {
+                    if (colors[i][j] > 0) {
+                        tempColors[index] = colors[i][j];
+                        tempValues[index] = values[i][j];
+                        index--;
                     }
+                }
+                //Log.d(TAG, String.format("randomed %d", r));
+                while (index >= 0) {
+                    int r = 1+random.nextInt(3);
+                    tempColors[index] = (short)r;
+                    tempValues[index] = 1;
+                    index--;
+                }
+                for (short j = 0; j < SIZE; j++) {
+                    values[i][j] = tempValues[j];
+                    colors[i][j] = tempColors[j];
                 }
             }
         }
