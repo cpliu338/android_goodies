@@ -2,17 +2,16 @@ package hk.org.woodland.lolo;
 
 import android.content.Context;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.support.v4.view.MotionEventCompat;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.MotionEvent;
-import android.view.View;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 
+import java.util.Arrays;
 import java.util.Random;
 
 import hk.org.woodland.mytestbed.R;
@@ -21,34 +20,54 @@ import hk.org.woodland.mytestbed.R;
  * Created by cpliu on 7/26/17.
  */
 
-public class LoloView extends View {
+public class LoloView extends SurfaceView {
 
     private static final String VIEW_STATE = "viewState";
     private static final String TAG = "Lolo";
     private Context context;
 
     public static final int SIZE = 6;
-    private Game game;
+    private Game game1, game2;
+
+    private boolean usingGame1;
+    private LoloDrawThread drawThread;
+    private SurfaceHolder surfaceHolder;
 
     private float width1;    // width1 of one tile in dp
     int size; // loloview size in px
+
+    /**
+     * If true, game1 is the current, game2 is the "undo" or previous game
+     */
+    public boolean isUsingGame1() {
+        return usingGame1;
+    }
+
+    public void setUsingGame1(boolean usingGame1) {
+        this.usingGame1 = usingGame1;
+    }
 
     static class Game {
         private short colors[][];   //
         private short values[][];   //
 
+        static short[][] deepCopy(short[][] original) {
+            if (original==null) return null;
+            final short[][] result = new short[original.length][];
+            for (int i=0; i<original.length; i++)
+                result[i] = Arrays.copyOf(original[i], original[i].length);
+            return result;
+        }
+
         Game() {
             colors = new short[SIZE][SIZE];
             values = new short[SIZE][SIZE];
-            this.initTiles(0);
-            /*
-            for (short i=0; i<SIZE; i++) {
-                for (short j=0; j<SIZE; j++) {
-                    colors[i][j] = 1;
-                    values[i][j] = 1;
-                }
-            }
-            */
+            //this.initTiles(0);
+        }
+
+        Game(Game sample) {
+            colors = deepCopy(sample.colors);
+            values = deepCopy(sample.values);
         }
 
         short getColorAtLeft(short x, short y) {
@@ -64,7 +83,7 @@ public class LoloView extends View {
                 for (short j = 0; j < SIZE; j++) {
                     if (colors[i][j] <= 0) {
                         colors[i][j] = origColor;
-                        Log.d(TAG, String.format("tile %d, %d reverted to %d", i, j, origColor));
+                        //Log.d(TAG, String.format("tile %d, %d reverted to %d", i, j, origColor));
                     }
                 }
             }
@@ -152,9 +171,8 @@ public class LoloView extends View {
             if (source) {
                 int nblacks = countBlacks();
                 if (nblacks < 3) {
-                    Log.d(TAG, String.format("revert %d blacks to %d", nblacks, origColor));
                     revertBlacks(origColor);
-                    Log.d(TAG, String.format("now there are %d blacks", countBlacks()));
+                    //Log.d(TAG, String.format("now there are %d blacks", countBlacks()));
                     return nblacks;
                 }
                 int result = values[x][y] += collectBlackValues();
@@ -166,47 +184,91 @@ public class LoloView extends View {
                     values[x][y] = (short)result;
                     colors[x][y] = origColor; // restore color
                 }
+                return nblacks;
             }
-            else ;
-                //values[x][y] = 0;
-            return 0;
+            else
+                return 0;
         }
     }
 
     public int getColorValueAtXY(short x, short y) {
-        switch (game.colors[x][y]) {
+        short color = usingGame1 ? game1.colors[x][y] : game2.colors[x][y];
+        switch (color) {
             case 1: return context.getResources().getColor(R.color.color1);
             case 2: return context.getResources().getColor(R.color.color2);
             case 3: return context.getResources().getColor(R.color.color3);
             case 50: return context.getResources().getColor(R.color.color50);
             case 0:
+                    //Log.d(TAG, String.format("black at %d, %d",x,y));
+                return context.getResources().getColor(R.color.color0);
             default:
                 return context.getResources().getColor(R.color.color0);
         }
     }
 
     public int spread(short x, short y, short origColor) {
-        return game.spread(x, y, origColor, true);
+        int result=0;
+            game2 = new Game(game1);
+            result = game2.spread(x, y, origColor, true);
+        return result;
     }
+
     public short getValueAtXY(short x, short y) {
-        return game.values[x][y];
+        return usingGame1 ? game1.values[x][y] : game2.values[x][y];
     }
     public short getColorAtXY(short x, short y) {
-        return game.colors[x][y];
+        return usingGame1 ? game1.colors[x][y] : game2.colors[x][y];
     }
-    public void initTiles(int mode) { game.initTiles(mode);}
+    short getColorAtLeft(short x, short y) {
+        return usingGame1 ? game1.getColorAtLeft(x, y) : game2.getColorAtLeft(x, y);
+    }
+    short getColorAtTop(short x, short y) {
+        return usingGame1 ? game1.getColorAtTop(x, y) : game2.getColorAtTop(x, y);
+    }
+    public void initTiles(int mode) {
+        game1 = new Game(game2);
+        game1.initTiles(mode);
+    }
 
     public void setColorAtXY(short x, short y, short color) {
-        game.colors[x][y] = color;
+        if (usingGame1)
+            game1.colors[x][y] = color;
+        else
+            game2.colors[x][y] = color;
     }
 
+    public LoloView(Context context) {
+        super(context);
+        init(context);
+    }
     public LoloView(Context context, AttributeSet attrs) {
         super(context, attrs);
+        init(context);
+    }
+    public LoloView(Context context, AttributeSet attr, int defStyle) {
+        super(context, attr, defStyle);
+        init(context);
+    }
+    public void init(Context context) {
         this.context = context;
-        game = new Game();
+        game1 = new Game();
+        game2 = new Game(game1); // this is all black
+        game1.initTiles(0); // init this, usingGame1
+        usingGame1 = true;
+        this.setWillNotDraw(false);
         setFocusable(true);
         setFocusableInTouchMode(true);
     }
+    @Override
+    protected void onDraw(Canvas canvas) {
+        Log.d(TAG, "onDraw");
+        drawThread = new LoloDrawThread(this);
+        drawThread.setRunning(true);
+        drawThread.start();
+
+        // See also http://android-er.blogspot.hk/2014/03/create-animation-on-surfaceview-in.html
+    }
+
     @Override
     protected Parcelable onSaveInstanceState() {
         Parcelable p = super.onSaveInstanceState();
@@ -225,10 +287,6 @@ public class LoloView extends View {
     /* should try post a handler
     @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-        // w and h are in dp
-        width1 = w / 6.0f;
-        height1 = h / 6.0f;
-        Log.d(TAG, "tile in dp: width1 " + width1 + ", height1 " + height1);
         super.onSizeChanged(w, h, oldw, oldh);
     }
     */
@@ -238,13 +296,13 @@ public class LoloView extends View {
         int width = MeasureSpec.getSize(widthMeasureSpec);
         int height = MeasureSpec.getSize(heightMeasureSpec);
         size = width > height ? height : width;
-        //Log.d(TAG, "size in dp: " + size);
         setMeasuredDimension(size, size);
     }
 
-    @Override
-    protected void onDraw(Canvas canvas) {
+    //@Override
+    protected void drawSomething(Canvas canvas) {
         // Draw the background...
+        //Log.d(TAG, "Drawing something: " + usingGame1);
         Paint background = new Paint();
         Paint brush =  new Paint();
         brush.setStrokeWidth(8.0f);
@@ -257,16 +315,16 @@ public class LoloView extends View {
         for (short i=0; i<SIZE; i++) {
             for (short j=0; j<SIZE; j++) {
                 background.setColor(getColorValueAtXY(i, j));
-                short owncolor = game.colors[i][j];
+                short owncolor = usingGame1 ? game1.colors[i][j] : game2.colors[i][j];
                 canvas.drawRect(i * width1, j * width1, (i + 1) * width1, (j + 1) * width1, background);
-                Short value = game.values[i][j];
+                Short value = usingGame1 ? game1.values[i][j] : game2.values[i][j];
                 if (value>1)
                     canvas.drawText(
                         value.toString(), (i+0.5f)*width1, (j+0.5f)*width1, brush
                     );
-                if (owncolor != game.getColorAtLeft(i,j))
+                if (owncolor != getColorAtLeft(i,j))
                     canvas.drawLine(i*width1, j*width1, i*width1, (j+1)*width1, brush);
-                if (owncolor != game.getColorAtTop(i,j))
+                if (owncolor != getColorAtTop(i,j))
                     canvas.drawLine(i*width1, j*width1, (i+1)*width1, j*width1, brush);
             }
         }
@@ -288,6 +346,5 @@ public class LoloView extends View {
 
     public void setWidth1(float width1) {
         this.width1=width1;
-        Log.d(TAG, "Width set to (dp): " + width1);
     }
 }
