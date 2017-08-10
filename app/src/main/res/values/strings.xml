@@ -11,12 +11,11 @@
 
     <!-- Strings related to Settings -->
 
-    <!-- Example General settings-->
+    <string name="lolo">Lolo</string>
     <string name="title_carrier">Carrier</string>
     <string name="summary_carrier">Name of mobile operator</string>
     <string name="title_fake_name">Fake Name</string>
     <string name="summary_fake_name">Name of caller</string>
     <string name="title_fake_number">Fake Number</string>
     <string name="summary_fake_number">Number of caller</string>
-    <string name="title_activity_lolo">LoloActivity</string>
 </resources>

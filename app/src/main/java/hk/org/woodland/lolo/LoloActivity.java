@@ -23,11 +23,14 @@ import hk.org.woodland.mytestbed.R;
 public class LoloActivity extends Activity implements View.OnTouchListener {
 
     private static final String TAG = "LoloAct";
+    public  static final int STATE_PLAN = 0;
+    public  static final int STATE_PLAY = 1;
     public static float SCALE_DPI;
 
     LoloView loloView;
     TextView status;
     int state; // 0=>plan, 1=>play
+    Integer score;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,13 +42,13 @@ public class LoloActivity extends Activity implements View.OnTouchListener {
         setContentView(R.layout.activity_lolo);
         status = (TextView) findViewById(R.id.status);
         final Button btn1 = (Button)findViewById(R.id.home);
-        state = 0;
-
+        state = STATE_PLAY;
+        score = 0;
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 state = 1-state;
-                btn1.setText(LoloActivity.this.getString(state==0 ? R.string.plan : R.string.play));
+                btn1.setText(LoloActivity.this.getString(state==STATE_PLAN ? R.string.plan : R.string.play));
                 if (state == 0) {
                     loloView.initTiles(0);
                     loloView.invalidate();
@@ -73,6 +76,8 @@ public class LoloActivity extends Activity implements View.OnTouchListener {
             case (MotionEvent.ACTION_DOWN) :
                 short x = (short)Math.floor(event.getX()/loloView.getWidth1());
                 short y = (short)Math.floor(event.getY()/loloView.getWidth1());
+                if (x>=LoloView.SIZE || y>=LoloView.SIZE)
+                    return super.onTouchEvent(event);
                 short oldcolor = loloView.getColorAtXY(x, y);
                 if (state == 0) {
                     loloView.setColorAtXY(x, y,
@@ -80,13 +85,15 @@ public class LoloActivity extends Activity implements View.OnTouchListener {
                     );
                 }
                 else {
-                    int nblacks = loloView.spread(x, y, oldcolor);
-                    Log.d(TAG,String.format("No of blacks %d", nblacks));
+                    int this_sore = loloView.spread(x, y, oldcolor);
+                    //Log.d(TAG,String.format("This score %d", this_sore));
+                    score += this_sore;
+                    status.setText(score.toString());
                     loloView.initTiles(0);
                 }
                 loloView.invalidate();
 
-                status.setText(String.format("%d, %d", loloView.getValueAtXY(x,y), 0));
+                //status.setText(String.format("%d, %d", loloView.getValueAtXY(x,y), 0));
                 return true;
             default :
                 return super.onTouchEvent(event);

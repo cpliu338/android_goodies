@@ -172,19 +172,24 @@ public class LoloView extends SurfaceView {
                 int nblacks = countBlacks();
                 if (nblacks < 3) {
                     revertBlacks(origColor);
-                    //Log.d(TAG, String.format("now there are %d blacks", countBlacks()));
-                    return nblacks;
+                    return 0;
                 }
-                int result = values[x][y] += collectBlackValues();
-                if (result>=50) {
-                    values[x][y] = 50;
-                    colors[x][y] = 50;
+                if (origColor < 50) {
+                    int result = values[x][y] += collectBlackValues();
+                    if (result >= 50) {
+                        values[x][y] = 50;
+                        colors[x][y] = 50;
+                    } else {
+                        values[x][y] = (short) result;
+                        colors[x][y] = origColor; // restore color
+                    }
+                    //Log.d(TAG, String.format("Value is %d", values[x][y]));
+                    return result;
                 }
                 else {
-                    values[x][y] = (short)result;
-                    colors[x][y] = origColor; // restore color
+                    colors[x][y] = 0; // make me black too
+                    return 50 * nblacks;
                 }
-                return nblacks;
             }
             else
                 return 0;
@@ -261,7 +266,7 @@ public class LoloView extends SurfaceView {
     }
     @Override
     protected void onDraw(Canvas canvas) {
-        Log.d(TAG, "onDraw");
+        //Log.d(TAG, "onDraw");
         drawThread = new LoloDrawThread(this);
         drawThread.setRunning(true);
         drawThread.start();

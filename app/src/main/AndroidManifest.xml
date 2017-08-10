@@ -38,7 +38,7 @@
         </activity>
         <activity
             android:name="hk.org.woodland.lolo.LoloActivity"
-            android:label="@string/title_activity_lolo"
+            android:label="@string/lolo"
             android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
