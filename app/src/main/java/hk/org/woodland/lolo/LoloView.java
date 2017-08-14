@@ -11,6 +11,7 @@ import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -23,7 +24,7 @@ import hk.org.woodland.mytestbed.R;
 public class LoloView extends SurfaceView {
 
     private static final String VIEW_STATE = "viewState";
-    private static final String TAG = "Lolo";
+    public static final String TAG = "Lolo";
     private Context context;
 
     public static final int SIZE = 6;
@@ -47,7 +48,7 @@ public class LoloView extends SurfaceView {
         this.usingGame1 = usingGame1;
     }
 
-    static class Game {
+    static class Game implements java.io.Serializable {
         private short colors[][];   //
         private short values[][];   //
 
@@ -230,6 +231,14 @@ public class LoloView extends SurfaceView {
     short getColorAtTop(short x, short y) {
         return usingGame1 ? game1.getColorAtTop(x, y) : game2.getColorAtTop(x, y);
     }
+
+    public void discardGame() {
+        game1 = new Game();
+        game2 = new Game(game1); // this is all black
+        game1.initTiles(0); // init this, usingGame1
+        usingGame1 = true;
+    }
+
     public void initTiles(int mode) {
         game1 = new Game(game2);
         game1.initTiles(mode);
@@ -256,10 +265,7 @@ public class LoloView extends SurfaceView {
     }
     public void init(Context context) {
         this.context = context;
-        game1 = new Game();
-        game2 = new Game(game1); // this is all black
-        game1.initTiles(0); // init this, usingGame1
-        usingGame1 = true;
+        discardGame();
         this.setWillNotDraw(false);
         setFocusable(true);
         setFocusableInTouchMode(true);
@@ -351,5 +357,26 @@ public class LoloView extends SurfaceView {
 
     public void setWidth1(float width1) {
         this.width1=width1;
+    }
+
+    public void restoreState(java.io.ObjectInputStream objectInputStream) {
+        try {
+            game1 = (Game)objectInputStream.readObject();
+        } catch (IOException e) {
+            Log.i(LoloView.TAG, "Error when restoring state");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void saveState(java.io.ObjectOutputStream objectOutputStream) {
+        try {
+            objectOutputStream.writeObject(game1);
+            objectOutputStream.flush();
+            Log.i(LoloView.TAG, "Done saving state");
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.i(LoloView.TAG, "Error when saving state");
+        }
     }
 }
