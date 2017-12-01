@@ -44,6 +44,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="hk.org.woodland.mytestbed.MainActivity" />
         </activity>
+        <activity
+            android:name="hk.org.woodland.mongo.DutyActivity"
+            android:label="@string/title_activity_duty"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="hk.org.woodland.mytestbed.MainActivity" />
+        </activity>
     </application>
 
 </manifest>
