@@ -3,7 +3,9 @@ package hk.org.woodland.mongo;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.text.InputType;
 import android.util.Log;
@@ -12,6 +14,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import hk.org.woodland.mytestbed.R;
 import com.google.android.gms.tasks.Continuation;
@@ -27,6 +30,7 @@ import com.mongodb.stitch.android.services.mongodb.MongoClient;
 
 import org.bson.Document;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DutyActivity extends Activity {
@@ -68,16 +72,33 @@ public class DutyActivity extends Activity {
                 confirm();
             }
             else if (LOGIN.equalsIgnoreCase(action.getText().toString())) {
+                SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(DutyActivity.this);
+                final String pwd = sharedPref.getString("carrier", "Pa55w0rd");
                 if (_client.isAuthenticated()) {
                     Log.i(TAG,"Logging out");
+                    Document doc = new Document("user_id", _client.getAuth().getUserId());
+                    doc.append("comment", "Logging out");
+                    List<Document> comments = new ArrayList<>();
+                    comments.add(doc);
+                    DutyActivity.this.showComments(comments);
                 }
-                _client.logInWithProvider(new EmailPasswordAuthProvider("cpliu338@yahoo.com", "Pa55w0rd")).continueWith(new Continuation<Auth, Object>() {
+                _client.logInWithProvider(new EmailPasswordAuthProvider("cpliu338@yahoo.com", pwd)).continueWith(new Continuation<Auth, Object>() {
                     @Override
                     public Object then(@NonNull final Task<Auth> task) throws Exception {
                         if (task.isSuccessful()) {
                             Log.i(TAG,"User Authenticated as " + _client.getAuth().getUserId());
+                            Document doc = new Document("user_id", _client.getAuth().getUserId());
+                            doc.append("comment", "Logged in");
+                            List<Document> comments = new ArrayList<>();
+                            comments.add(doc);
+                            DutyActivity.this.showComments(comments);
                         } else {
-                            Log.e(TAG, "Error logging in anonymously", task.getException());
+                            Log.e(TAG, "Error logging in anonymously "+ pwd, task.getException());
+                            Document doc = new Document("user_id", task.getException().toString());
+                            doc.append("comment", "Error logging in");
+                            List<Document> comments = new ArrayList<>();
+                            comments.add(doc);
+                            DutyActivity.this.showComments(comments);
                         }
                         return null;
                     }
