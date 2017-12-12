@@ -11,6 +11,7 @@
 
     <!-- Strings related to Settings -->
 
+    <string name="marquee">Marquee</string>
     <string name="lolo">Lolo</string>
     <string name="title_carrier">Carrier</string>
     <string name="summary_carrier">Name of mobile operator</string>

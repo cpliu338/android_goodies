@@ -66,9 +66,14 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
                 //SlideByClickOrTilt.lockActivityOrientation(this);
                 setFakeTime();
                 break;
-            case R.id.settings:
-                Intent intent = new Intent(this, SettingsActivity.class);
+            case R.id.marquee:
+                Intent intent = new Intent(this, MarqueeActivity.class);
                 startActivity(intent);
+                break;
+            case R.id.settings:
+                intent = new Intent(this, SettingsActivity.class);
+                startActivity(intent);
+                break;
         }
         return super.onOptionsItemSelected(item);
     }

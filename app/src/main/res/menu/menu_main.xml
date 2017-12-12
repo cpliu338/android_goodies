@@ -9,6 +9,10 @@
         android:title="@string/fakecall"
         app:showAsAction="never" />
     <item
+        android:id="@+id/marquee"
+        android:title="@string/marquee"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/settings"
         android:title="@string/settings"
         app:showAsAction="never" />

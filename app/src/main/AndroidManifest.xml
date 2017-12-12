@@ -52,6 +52,13 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="hk.org.woodland.mytestbed.MainActivity" />
         </activity>
+        <activity android:name=".MarqueeActivity"
+            android:label="Marquee"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="hk.org.woodland.mytestbed.MainActivity" />
+        </activity>
     </application>
 
 </manifest>
