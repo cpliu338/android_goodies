@@ -1,18 +1,30 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <EditTextPreference
-		android:key="carrier"
-		android:title="@string/title_carrier"
-		android:summary="@string/summary_carrier"
-		 />
-	<EditTextPreference
-		android:key="fake_name"
-		android:title="@string/title_fake_name"
-		android:summary="@string/summary_fake_name"
-		 />
-	<EditTextPreference
-		android:key="fake_number"
-		android:title="@string/title_fake_number"
-		android:summary="@string/summary_fake_number"
-		android:defaultValue="" />
+
+	<PreferenceCategory
+		android:title="@string/fakecall">
+		<EditTextPreference
+			android:key="carrier"
+			android:title="@string/title_carrier"
+			android:summary="@string/summary_carrier"
+			/>
+		<EditTextPreference
+			android:key="fake_name"
+			android:title="@string/title_fake_name"
+			android:summary="@string/summary_fake_name"
+			/>
+		<EditTextPreference
+			android:key="fake_number"
+			android:title="@string/title_fake_number"
+			android:summary="@string/summary_fake_number"
+			android:defaultValue="" />
+	</PreferenceCategory>
+	<PreferenceCategory
+		android:title="@string/marquee">
+		<EditTextPreference
+			android:key="scrolling_text"
+			android:title="@string/scrolling_text"
+			android:summary="@string/summary_scroll"
+			android:defaultValue="" />
+	</PreferenceCategory>
 
 </PreferenceScreen>

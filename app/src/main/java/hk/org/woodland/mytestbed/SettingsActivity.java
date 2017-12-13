@@ -194,6 +194,7 @@ public class SettingsActivity extends PreferenceActivity {
             bindPreferenceSummaryToValue(findPreference(FakeRingingActivity.CARRIER));
             bindPreferenceSummaryToValue(findPreference(FakeRingingActivity.FAKENAME));
             bindPreferenceSummaryToValue(findPreference(FakeRingingActivity.FAKENUMBER));
+            bindPreferenceSummaryToValue(findPreference(MarqueeActivity.SCROLLING_TEXT));
         }
 
         @Override
