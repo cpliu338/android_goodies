@@ -11,11 +11,16 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
+import android.support.v7.app.AlertDialog;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+
+import com.google.zxing.integration.android.IntentIntegrator;
+import com.google.zxing.integration.android.IntentResult;
 
 import hk.org.woodland.goodies.ClickOrTiltListener;
 import hk.org.woodland.goodies.SlideByClickOrTilt;
@@ -25,7 +30,7 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
 
     private Sensor gravity;
     private SensorManager sensorManager;
-    private Button btn1;
+    private Button btn1, btnScan;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +53,29 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
             startActivity(intent);
             }
         });
+        btnScan = (Button)findViewById(R.id.btn3);
+        btnScan.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                IntentIntegrator intentIntegrator = new IntentIntegrator(MainActivity.this);
+                intentIntegrator.initiateScan();
+            }
+        });
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        IntentResult scanResult = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
+        if(scanResult != null) {
+            Log.i("SCAN", "scan result: " + scanResult);
+            //AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            //builder.setMessage(scanResult.toString()).show();
+            btnScan.setText(scanResult.getContents());
+            //resultTextView.setText(scanResult.toString());
+        } else
+            Log.e("SCAN", "Sorry, the scan was unsuccessful...");
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
