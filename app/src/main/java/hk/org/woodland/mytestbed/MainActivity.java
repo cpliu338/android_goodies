@@ -57,8 +57,11 @@ public class MainActivity extends Activity implements ClickOrTiltListener {
         btnScan.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                IntentIntegrator intentIntegrator = new IntentIntegrator(MainActivity.this);
-                intentIntegrator.initiateScan();
+                Intent intent = new Intent(MainActivity.this, AttendanceActivity.class);
+                startActivity(intent);
+
+                //IntentIntegrator intentIntegrator = new IntentIntegrator(MainActivity.this);
+                //intentIntegrator.initiateScan();
             }
         });
     }
